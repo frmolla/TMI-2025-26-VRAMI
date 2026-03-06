@@ -1,0 +1,106 @@
+# Angular
+/Frontend/dist/
+/Frontend/bazel-out
+/Frontend/integration/bazel/bazel-bin/
+/Frontend/integration/bazel/bazel-genfiles/
+
+# misc
+/Frontend/.angular/cache
+/Frontend/.sass-cache
+/Frontend/connect.lock
+/Frontend/coverage
+/Frontend/libpeerconnection.log
+/Frontend/testem.db
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+
+# Miscellaneous
+/Frontend/.angular/cache
+.env
+/Frontend/node_modules/
+/Frontend/npm-debug.log
+/Frontend/yarn-error.log
+
+# Dependencies
+package-lock.json
+yarn.lock
+
+#For backend
+# compiled output
+/Backend/dist
+/Backend/node_modules
+/Backend/build
+
+# Logs
+/Backend/logs
+/Backend/*.log
+/Backend/npm-debug.log*
+/Backend/pnpm-debug.log*
+/Backend/yarn-debug.log*
+/Backend/yarn-error.log*
+/Backend/lerna-debug.log*
+
+# OS
+.DS_Store
+
+# Tests
+/Backend/coverage
+/Backend/.nyc_output
+
+# IDEs and editors
+/Backend/.idea
+/Backend/.project
+/Backend/.classpath
+/Backend/.c9/
+/Backend/*.launch
+/Backend/.settings/
+/Backend/*.sublime-workspace
+
+# IDE - VSCode
+/Backend/.vscode/*
+!/Backend/.vscode/settings.json
+!/Backend/.vscode/tasks.json
+!/Backend/.vscode/launch.json
+!/Backend/.vscode/extensions.json
+
+# dotenv environment variable files
+/Backend/.env
+/Backend/.env.development.local
+/Backend/.env.test.local
+/Backend/.env.production.local
+/Backend/.env.local
+
+# temp directory
+/Backend/.temp
+/Backend/.tmp
+
+# Runtime data
+/Backend/pids
+/Backend/*.pid
+/Backend/*.seed
+/Backend/*.pid.lock
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+/Backend/report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
