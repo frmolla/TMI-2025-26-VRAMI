@@ -1,9 +1,9 @@
-import {Routes} from '@angular/router';
-import {AppLayout} from '@/layout/components/app.layout';
+import { Routes } from '@angular/router';
+import { AppLayout } from '@/layout/components/app.layout';
 
 export const appRoutes: Routes = [
     {
-        path: '',
+        path: 'test',
         component: AppLayout,
         children: [
             {
@@ -20,7 +20,18 @@ export const appRoutes: Routes = [
                 path: 'pages',
                 data: { breadcrumb: 'Pages' },
                 loadChildren: () => import('@/pages/pages.routes')
-            },
+            }
+        ]
+    },
+    {
+        path: '',
+        component: AppLayout,
+        children: [
+            {
+                path: '',
+                data: { breadcrumb: 'E-Commerce Dashboard' },
+                loadComponent: () => import('@/pages/main/main').then((c) => c.Main)
+            }
         ]
     },
     { path: 'auth', loadChildren: () => import('@/pages/auth/auth.routes') },

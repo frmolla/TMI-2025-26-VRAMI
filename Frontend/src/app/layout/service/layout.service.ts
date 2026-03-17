@@ -1,6 +1,6 @@
-import {computed, effect, Injectable, signal, Signal, WritableSignal} from '@angular/core';
-import {Subject} from 'rxjs';
-import {MenuItem} from 'primeng/api';
+import { computed, effect, Injectable, signal, Signal, WritableSignal } from '@angular/core';
+import { Subject } from 'rxjs';
+import { MenuItem } from 'primeng/api';
 
 export type MenuMode = 'static' | 'overlay' | 'horizontal' | 'slim' | 'slim-plus' | 'reveal' | 'drawer';
 
@@ -46,7 +46,7 @@ export class LayoutService {
         primary: 'emerald',
         surface: null,
         darkTheme: true,
-        menuMode: 'static'
+        menuMode: 'horizontal'
     };
 
     _state: LayoutState = {
