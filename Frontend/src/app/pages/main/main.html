@@ -1,2 +1,20 @@
-<p>main works!</p>
-<app-map></app-map>
+<div style="padding: 20px">
+
+  <h2 *ngIf="user?.type === 'guest'">
+    Bienvenido Invitado 
+  </h2>
+
+  <h2 *ngIf="user?.type === 'user'">
+    Bienvenido {{ user.email }}
+  </h2>
+
+  <button (click)="logout()" style="margin-bottom: 20px;">
+    Cerrar sesión
+  </button>
+
+  <hr>
+
+  <!-- tu contenido actual -->
+  <app-map></app-map>
+
+</div>
