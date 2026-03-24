@@ -1,17 +1,17 @@
-import {Component, computed, ElementRef, inject, ViewChild} from '@angular/core';
-import {MenuItem} from 'primeng/api';
-import {RouterModule} from '@angular/router';
-import {CommonModule} from '@angular/common';
-import {StyleClassModule} from 'primeng/styleclass';
-import {LayoutService} from '@/layout/service/layout.service';
-import {Ripple} from 'primeng/ripple';
-import {InputText} from 'primeng/inputtext';
-import {ButtonModule} from 'primeng/button';
-import {IconField} from 'primeng/iconfield';
-import {InputIcon} from 'primeng/inputicon';
-import {FormsModule} from '@angular/forms';
-import {AppSidebar} from '@/layout/components/app.sidebar';
-import {AppBreadcrumb} from '@/layout/components/app.breadcrumb';
+import { Component, computed, ElementRef, inject, ViewChild } from '@angular/core';
+import { MenuItem } from 'primeng/api';
+import { RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { StyleClassModule } from 'primeng/styleclass';
+import { LayoutService } from '@/layout/service/layout.service';
+import { Ripple } from 'primeng/ripple';
+import { InputText } from 'primeng/inputtext';
+import { ButtonModule } from 'primeng/button';
+import { IconField } from 'primeng/iconfield';
+import { InputIcon } from 'primeng/inputicon';
+import { FormsModule } from '@angular/forms';
+import { AppSidebar } from '@/layout/components/app.sidebar';
+import { AppBreadcrumb } from '@/layout/components/app.breadcrumb';
 
 @Component({
     selector: '[app-topbar]',
@@ -115,11 +115,6 @@ import {AppBreadcrumb} from '@/layout/components/app.breadcrumb';
                         </li>
                     </ul>
                 </li>
-
-                <li class="right-panel-button relative hidden! lg:block!">
-                    <button pButton pRipple type="button" label="Today" style="width: 5.7rem" icon="pi pi-bookmark" class="layout-rightmenu-button hidden! md:inline-flex! font-normal" (click)="onProfileMenuButtonClick()"></button>
-                    <button pButton pRipple type="button" icon="pi pi-bookmark" class="layout-rightmenu-button block! md:hidden! font-normal" (click)="onSidebarButtonClick()"></button>
-                </li>
             </ul>
         </div>
     `,
@@ -161,7 +156,6 @@ export class AppTopbar {
             ...val,
             searchBarActive: false
         }));
-
     }
 
     onConfigButtonClick() {
@@ -175,7 +169,7 @@ export class AppTopbar {
         }));
     }
 
-    onProfileMenuButtonClick(){
+    onProfileMenuButtonClick() {
         this.layoutService.layoutState.update((val) => ({
             ...val,
             rightMenuActive: true
