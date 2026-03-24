@@ -1,2 +1,55 @@
-<p>main works!</p>
-<app-map></app-map>
+<div class="vrami-container">
+    <!-- MAPA -->
+    <div class="map-layer">
+        <app-map></app-map>
+    </div>
+
+    <!-- PANEL FORMULARIO-->
+    <aside class="sidebar-layer">
+        <div class="header">
+            <h2>VRAMI</h2>
+        </div>
+
+        <!-- Buscador -->
+        <div class="buscador-container">
+            <input type="text" [(ngModel)]="lugarActual" (input)="buscarCiudad($event)" placeholder="Busca una ciudad o país..." />
+            <ul class="sugerencias-lista" *ngIf="sugerencias.length > 0">
+                <li *ngFor="let sug of sugerencias" (click)="seleccionarSugerencia(sug)">{{ sug.nombre }}</li>
+            </ul>
+        </div>
+
+        <div class="resumen-distancia">
+            <p>En total - {{ ruta.length > 0 ? ruta.length * 1500 : 0 }} km recorridos</p>
+        </div>
+
+        <!-- Lista de destinos -->
+        <div class="rutas-container">
+            <ul cdkDropList (cdkDropListDropped)="soltar($event)" *ngIf="ruta.length > 0; else sinDestinos">
+                <li *ngFor="let parada of ruta; let i = index" class="parada-item" cdkDrag>
+                    <!-- Este div es de donde el usuario "agarra" el elemento -->
+                    <div class="drag-handle" cdkDragHandle>☰</div>
+
+                    <div class="info-parada">
+                        <span class="indice">{{ i === 0 ? 'Origen' : i }}</span>
+                        <span class="nombre">{{ parada.nombre }}</span>
+                    </div>
+
+                    <button class="btn-borrar" (click)="eliminarParada(i)">✕</button>
+                </li>
+            </ul>
+            <ng-template #sinDestinos>
+                <p class="mensaje-vacio">Añade puntos para crear tu ruta.</p>
+            </ng-template>
+        </div>
+
+        <!-- Controles inferiores -->
+        <div class="controles-inferiores">
+            <label>Tipo de animación</label>
+            <select class="select-animacion">
+                <option>1 - Secuencial</option>
+                <option>2 - Loop</option>
+            </select>
+            <button class="btn-descargar">Descargar</button>
+        </div>
+    </aside>
+</div>
