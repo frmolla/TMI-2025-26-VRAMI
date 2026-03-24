@@ -198,9 +198,9 @@ Frontend/
 
 ## Ejecutar desde los Laboratorios
 
- Desde el CMD 
+ - Desde el CMD 
  
- cd TMI-2025-26-VRAMI/Frontend
- npm intall
- npm install -g @angular/cli
- ng verion
+ - cd TMI-2025-26-VRAMI/Frontend
+ - npm intall
+ - npm install -g @angular/cli
+ - npx ng verion
