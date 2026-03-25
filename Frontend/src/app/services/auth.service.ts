@@ -4,6 +4,7 @@ import { Injectable } from '@angular/core';
     providedIn: 'root'
 })
 export class AuthService {
+    // Usamos sessionStorage para que se borre SOLO al cerrar la pestaña
     private readonly STORAGE_KEY = 'user';
 
     login(email: string, password: string) {
@@ -12,7 +13,7 @@ export class AuthService {
             email: email
         };
 
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
+        sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
     }
 
     loginAsGuest() {
@@ -20,11 +21,11 @@ export class AuthService {
             type: 'guest'
         };
 
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
+        sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
     }
 
     getUser() {
-        const data = localStorage.getItem(this.STORAGE_KEY);
+        const data = sessionStorage.getItem(this.STORAGE_KEY);
         return data ? JSON.parse(data) : null;
     }
 
@@ -33,6 +34,6 @@ export class AuthService {
     }
 
     logout() {
-        localStorage.removeItem(this.STORAGE_KEY);
+        sessionStorage.removeItem(this.STORAGE_KEY);
     }
 }

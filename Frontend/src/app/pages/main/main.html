@@ -1,16 +1,36 @@
-<div class="vrami-container">
-    <!-- MAPA -->
+<div class="vrami-container" style="position: relative;">
+    
+    <p>LOGIN.</p>
+    <div style="position: absolute; top: 20px; left: 80px; z-index: 1000; background: rgba(255,255,255,0.9); padding: 5px 15px; border-radius: 20px; backdrop-filter: blur(4px); border: 1px solid rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        
+        <span *ngIf="user?.type === 'guest'" style="color: #333; font-weight: 600; font-size: 0.9rem;">
+            Entraste como Invitado
+        </span>
+        <span *ngIf="user?.type === 'user'" style="color: #333; font-weight: 600; font-size: 0.9rem;">
+            Bienvenido {{ user.email }}
+        </span>
+
+        <div style="width: 1px; height: 15px; background: #ccc;"></div>
+
+        <button 
+            (click)="onLogout()" 
+            title="Cerrar Sesión"
+            style="background: none; border: none; cursor: pointer; color: #ef4444; display: flex; align-items: center; padding: 2px; transition: transform 0.2s;"
+            onmouseover="this.style.transform='scale(1.2)'"
+            onmouseout="this.style.transform='scale(1)'">
+            <i class="pi pi-sign-out" style="font-size: 1.1rem;"></i>
+        </button>
+    </div>
+
     <div class="map-layer">
         <app-map></app-map>
     </div>
 
-    <!-- PANEL FORMULARIO-->
     <aside class="sidebar-layer">
         <div class="header">
             <h2>VRAMI</h2>
         </div>
 
-        <!-- Buscador -->
         <div class="buscador-container">
             <input type="text" [(ngModel)]="lugarActual" (input)="buscarCiudad($event)" placeholder="Busca una ciudad o país..." />
             <ul class="sugerencias-lista" *ngIf="sugerencias.length > 0">
@@ -22,18 +42,14 @@
             <p>En total - {{ ruta.length > 0 ? ruta.length * 1500 : 0 }} km recorridos</p>
         </div>
 
-        <!-- Lista de destinos -->
         <div class="rutas-container">
             <ul cdkDropList (cdkDropListDropped)="soltar($event)" *ngIf="ruta.length > 0; else sinDestinos">
                 <li *ngFor="let parada of ruta; let i = index" class="parada-item" cdkDrag>
-                    <!-- Este div es de donde el usuario "agarra" el elemento -->
                     <div class="drag-handle" cdkDragHandle>☰</div>
-
                     <div class="info-parada">
                         <span class="indice">{{ i === 0 ? 'Origen' : i }}</span>
                         <span class="nombre">{{ parada.nombre }}</span>
                     </div>
-
                     <button class="btn-borrar" (click)="eliminarParada(i)">✕</button>
                 </li>
             </ul>
@@ -42,7 +58,6 @@
             </ng-template>
         </div>
 
-        <!-- Controles inferiores -->
         <div class="controles-inferiores">
             <label>Tipo de animación</label>
             <select class="select-animacion">
