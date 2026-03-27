@@ -9,8 +9,6 @@ import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
 import { InputIcon } from 'primeng/inputicon';
 import { IconField } from 'primeng/iconfield';
-import { Fluid } from 'primeng/fluid';
-
 import { LayoutService } from '@/layout/service/layout.service';
 import { AppConfigurator } from '@/layout/components/app.configurator';
 import { AuthService } from '@/services/auth.service';
@@ -19,134 +17,52 @@ import { AuthService } from '@/services/auth.service';
     selector: 'app-login',
     standalone: true,
     imports: [
-        CommonModule,
-        ButtonModule,
-        CheckboxModule,
-        InputTextModule,
-        PasswordModule,
-        FormsModule,
-        RouterModule,
-        RippleModule,
-        InputIcon,
-        IconField,
-        Fluid,
-        AppConfigurator
+        CommonModule, ButtonModule, CheckboxModule, InputTextModule,
+        PasswordModule, FormsModule, RouterModule, RippleModule,
+        InputIcon, IconField, AppConfigurator
     ],
+    styleUrls: ['./login.scss'],
     template: `
-        <div [class]="'flex min-h-screen ' + (layoutService.isDarkTheme() ? 'layout-dark' : 'layout-light')">
-            <div
-                *ngIf="layoutService.isDarkTheme()"
-                class="w-6/12 h-screen hidden md:block shrink-0"
-                style="max-width: 490px; background-image: url('/images/pages/login-ondark.png'); background-repeat: no-repeat; background-size: cover"
-            ></div>
+        <div class="login-container">
+            <div class="login-glass-card">
+            
+                <div class="login-header">
+                    <img src="/images/pages/vrami-logo.png" alt="VRAMI Logo" class="main-logo">
+                </div>
 
-            <div
-                *ngIf="!layoutService.isDarkTheme()"
-                class="w-6/12 h-screen hidden md:block shrink-0"
-                style="max-width: 490px; background-image: url('/images/pages/login-onlight.png'); background-repeat: no-repeat; background-size: cover"
-            ></div>
+                <div class="form-content">
+                    <p-iconfield class="w-full mb-4">
+                        <p-inputicon class="pi pi-envelope" />
+                        <input pInputText type="email" placeholder="Email" class="glass-input" [(ngModel)]="email" name="email" />
+                    </p-iconfield>
 
-            <div class="w-full" style="background: var(--surface-ground)">
-                <p-fluid
-                    class="min-h-screen text-center w-full flex items-center md:items-start justify-center flex-col bg-auto md:bg-contain bg-no-repeat!"
-                    style="padding: 20% 10% 20% 10%; background: var(--exception-pages-image); background-size: contain;"
-                >
-                    <div class="flex flex-col">
-                        <div class="flex items-center mb-12">
-                            <img
-                                [src]="layoutService.isDarkTheme() ? '/images/logo-light.png' : '/images/logo-dark.png'"
-                                style="width: 45px"
-                                alt="logo"
-                            />
-                            <img
-                                [src]="layoutService.isDarkTheme() ? '/images/appname-light.png' : '/images/appname-dark.png'"
-                                class="ml-4"
-                                style="width: 100px"
-                                alt="app name"
-                            />
-                        </div>
+                    <p-iconfield class="w-full mb-2">
+                        <p-inputicon class="pi pi-key" />
+                        <input pInputText type="password" placeholder="Password" class="glass-input" [(ngModel)]="password" name="password" />
+                    </p-iconfield>
 
-                        <div class="form-container">
-                            <p-iconfield>
-                                <p-inputicon class="pi pi-envelope" />
-                                <input
-                                    pInputText
-                                    type="email"
-                                    placeholder="Email"
-                                    class="block mb-4"
-                                    style="max-width: 320px; min-width: 270px"
-                                    [(ngModel)]="email"
-                                    name="email"
-                                />
-                            </p-iconfield>
+                    <small *ngIf="errorMessage" class="error-msg">{{ errorMessage }}</small>
 
-                            <p-iconfield>
-                                <p-inputicon class="pi pi-key" />
-                                <input
-                                    pInputText
-                                    type="password"
-                                    placeholder="Password"
-                                    class="block mb-2"
-                                    style="max-width: 320px; min-width: 270px"
-                                    [(ngModel)]="password"
-                                    name="password"
-                                />
-                            </p-iconfield>
+                    <a routerLink="/auth/forgotpassword" class="forgot-link">Forgot your password?</a>
 
-                            <small *ngIf="errorMessage" class="block text-red-500 mb-4 text-left" style="max-width: 320px">
-                                {{ errorMessage }}
-                            </small>
-
-                            <a
-                                routerLink="/auth/forgotpassword"
-                                class="flex text-surface-500 dark:text-surface-400 mb-6 text-sm"
-                            >
-                                Forgot your password?
-                            </a>
-                        </div>
-
-                        <div class="mt-6">
-                            <button
-                                pButton
-                                pRipple
-                                type="button"
-                                class="block w-full"
-                                style="max-width: 320px; margin-bottom: 16px"
-                                (click)="login()"
-                            >
-                                Login
-                            </button>
-
-                            <button
-                                pButton
-                                pRipple
-                                type="button"
-                                severity="secondary"
-                                class="block w-full"
-                                style="max-width: 320px; margin-bottom: 24px"
-                                (click)="loginGuest()"
-                            >
-                                Entrar como invitado
-                            </button>
-
-                            <span class="flex text-sm text-surface-500 dark:text-surface-400">
-                                Don’t have an account?
-                                <a class="cursor-pointer ml-1" routerLink="/auth/register">Sign-up here</a>
-                            </span>
-                        </div>
+                    <div class="actions-container">
+                        <button pButton pRipple label="Login" class="btn-login w-full" (click)="login()"></button>
+                        <button pButton pRipple severity="secondary" label="Entrar como invitado" class="btn-guest w-full" (click)="loginGuest()"></button>
                     </div>
 
-                    <div class="flex items-center absolute" style="bottom: 75px">
-                        <div class="flex items-center pr-6 mr-6 border-r border-surface-200 dark:border-surface-700">
-                            <img src="/images/logo-gray.png" style="width: 22px" alt="logo gray" />
-                            <img src="/images/appname-gray.png" class="ml-2" style="width: 45px" alt="app name gray" />
-                        </div>
-                        <span class="text-sm text-surface-500 dark:text-surface-400 mr-4">Copyright 2025</span>
+                    <span class="signup-text">
+                        Don’t have an account? <a routerLink="/auth/register">Sign-up here</a>
+                    </span>
+                </div>
+
+                <div class="login-footer">
+                    <div class="footer-brand">
+                        <span class="brand-name">VRAMI</span>
                     </div>
-                </p-fluid>
+                    <span class="copyright">Copyright 2026</span>
+                </div>
             </div>
         </div>
-
         <app-configurator [simple]="true" />
     `
 })
@@ -164,7 +80,6 @@ export class Login {
             this.errorMessage = 'Debes ingresar email y contraseña.';
             return;
         }
-
         this.authService.login(this.email, this.password);
         this.errorMessage = '';
         this.router.navigate(['/']);

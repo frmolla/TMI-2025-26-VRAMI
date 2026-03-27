@@ -1,0 +1,118 @@
+.login-container {
+    background: url("/images/pages/login-bg.png") no-repeat center center fixed !important;
+    background-size: cover !important;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+}
+.login-glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 3rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+
+.main-logo {
+    width: 160px;
+    margin-bottom: 2rem;
+}
+
+.glass-input {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    border-radius: 12px !important;
+    width: 100%;
+    
+    &::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+}
+
+.btn-login {
+    background: #2dd4bf !important; // El verde menta de tu foto
+    border: none !important;
+    color: #0f172a !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+    padding: 0.8rem !important;
+    margin-bottom: 1rem;
+}
+
+.btn-guest {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    color: white !important;
+    border-radius: 12px !important;
+    padding: 0.8rem !important;
+}
+
+.forgot-link, .signup-text, .signup-text a {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    text-decoration: none;
+    display: block;
+    margin: 1rem 0;
+}
+
+.signup-text a {
+    display: inline;
+    color: #2dd4bf;
+    font-weight: 600;
+}
+
+.login-footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    
+    .footer-brand {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        opacity: 0.6;
+        margin-bottom: 0.5rem;
+        
+        img { width: 20px; }
+        .brand-name { font-weight: 600; letter-spacing: 1px; color: white; }
+    }
+    
+    .copyright { font-size: 0.7rem; color: rgba(255, 255, 255, 0.4); }
+}
+
+.error-msg {
+    color: #ff4d4d;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.login-header {
+    display: flex;
+    justify-content: center; 
+    width: 100%;
+    margin-bottom: 1rem;    
+}
+
+
+.main-logo {
+    width: 140px; 
+    height: 140px; 
+    
+
+    border-radius: 50%; 
+    object-fit: cover;   
+    
+    margin-bottom: 2rem; 
+    display: block;      
+    margin-left: auto;  
+    margin-right: auto;  
+}
