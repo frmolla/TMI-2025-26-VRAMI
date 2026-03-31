@@ -6,12 +6,8 @@ import { MapComponent } from 'public/app/map/map';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
-
-export interface Parada {
-    nombre: string;
-    lat: number;
-    lng: number;
-}
+import { MapService } from '@/services/map.service';
+import { Parada } from 'public/app/map/models/parada.model';
 
 @Component({
     selector: 'app-main',
@@ -20,10 +16,13 @@ export interface Parada {
     templateUrl: './main.html',
     styleUrl: './main.scss'
 })
+
 export class Main implements OnInit {
 
     private authService = inject(AuthService);
     private router = inject(Router);
+
+    constructor(private mapService: MapService) {}
 
     user: any = null;
 
@@ -85,10 +84,17 @@ export class Main implements OnInit {
         this.ruta.push(lugar);
         this.lugarActual = '';
         this.sugerencias = [];
+        // añadir punto de ruta
+        this.mapService.addMarker(lugar);
     }
 
     eliminarParada(index: number) {
-        this.ruta.splice(index, 1);
+        const parada = this.ruta.at(index)
+        if (parada){
+            this.ruta.splice(index, 1);
+            // eliminar punto de ruta
+            this.mapService.eraseMarker(parada);
+        }
     }
 
     soltar(event: CdkDragDrop<Parada[]>) {
@@ -96,7 +102,7 @@ export class Main implements OnInit {
     }
 
     onLogout() {
-    this.authService.logout();
-    this.router.navigate(['/auth/login']);
+        this.authService.logout();
+        this.router.navigate(['/auth/login']);
     }
 }

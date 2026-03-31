@@ -1,3 +1,9 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
 .map-section {
   width: 100vw;
   height: 100vh;
@@ -6,4 +12,28 @@
 #map {
   width: 100%;
   height: 100%;
+}
+
+.map-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.map-marker svg {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.map-marker.active svg {
+  fill: #2563eb;
+}
+
+.map-marker.inactive svg {
+  fill: #ef4444;
 }
