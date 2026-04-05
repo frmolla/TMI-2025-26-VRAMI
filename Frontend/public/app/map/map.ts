@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy  } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input  } from '@angular/core';
 import mapboxgl, { Map } from 'mapbox-gl';
 import { IPoints } from './models/points.model';
 import { mapIcons } from './map-icons';
@@ -11,11 +11,12 @@ import { Subject, takeUntil } from 'rxjs';
   templateUrl: 'map.html',
   styleUrls: ['map.scss']
 })
-export class MapComponent implements OnInit, OnDestroy   {
+export class MapComponent implements OnInit, OnDestroy {
 map!: Map;
 accessToken = 'pk.eyJ1IjoiZnJtb2xsYSIsImEiOiJjbThwZjZzNDMwOXNiMmtzY213c3JwZG5zIn0.yQ_fgbNya6IUaV-s4R9iSw'; // Add your public token here
 mapStyle = 'mapbox://styles/mapbox/streets-v12'
 points: IPoints[] = [];
+@Input() ruta: Parada[] = [];
 markers: mapboxgl.Marker[] = [];
 
 private destroy$ = new Subject<void>();
@@ -30,6 +31,10 @@ ngOnInit(): void {
 
   this.mapService.markerErase$.subscribe(lugar => {
     this.eraseMarker(lugar);
+  });
+
+  this.mapService.markerReorder$.subscribe(() => {
+    this.markerReorder();
   });
 }
 
@@ -61,7 +66,7 @@ initMap() {
 }
 
 addMarker(lugar: Parada){
-    this.points.push({ nombre: lugar.nombre, coords: [lugar.lng, lugar.lat], status: 'active' })
+    this.points.push({ nombre: lugar.nombre, coords: [lugar.lng, lugar.lat], status: 'active', orden: lugar.pos })
     console.log(`addMarker`)
     this.renderMarkers()
 }
@@ -72,12 +77,23 @@ eraseMarker(lugar: Parada){
     this.renderMarkers()
 }
 
+markerReorder() {
+    this.points = this.ruta.map((p, index) => ({
+        nombre: p.nombre,
+        coords: [p.lng, p.lat],
+        status: 'active',
+        orden: index + 1
+    }));
+
+    this.renderMarkers();
+}
+
 renderMarkers() {
     this.markers.forEach((marker) => marker.remove());
     this.markers = [];
 
     this.points.forEach((point, index) => {
-      const markerEl = this.getMarkerElement(point.status);
+      const markerEl = this.getMarkerElement(point);
       console.debug(`index: ${index}`)
 
       const marker = new mapboxgl.Marker({
@@ -97,11 +113,11 @@ renderMarkers() {
     });
   }
 
-  getMarkerElement(status: IPoints['status']): HTMLElement {
+  getMarkerElement(point: IPoints): HTMLElement {
     const wrapper = document.createElement('div');
-    wrapper.classList.add('map-marker', status);
+    wrapper.classList.add('map-marker', point.status);
 
-    const rawSvg = mapIcons[status] || mapIcons['inactive'];
+    const rawSvg = mapIcons.marker(point);
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(rawSvg, 'image/svg+xml');

@@ -81,11 +81,14 @@ export class Main implements OnInit {
     }
 
     seleccionarSugerencia(lugar: Parada) {
-        this.ruta.push(lugar);
-        this.lugarActual = '';
-        this.sugerencias = [];
+        lugar.pos = this.ruta.length + 1;
+        this.ruta.push(lugar);     
+        
         // añadir punto de ruta
         this.mapService.addMarker(lugar);
+
+        this.lugarActual = '';
+        this.sugerencias = [];
     }
 
     eliminarParada(index: number) {
@@ -94,11 +97,16 @@ export class Main implements OnInit {
             this.ruta.splice(index, 1);
             // eliminar punto de ruta
             this.mapService.eraseMarker(parada);
-        }
+            this.mapService.reorder();
+        }   
     }
 
     soltar(event: CdkDragDrop<Parada[]>) {
         moveItemInArray(this.ruta, event.previousIndex, event.currentIndex);
+
+        this.ruta.forEach((p, index) => p.pos = index + 1);
+
+        this.mapService.reorder();
     }
 
     onLogout() {

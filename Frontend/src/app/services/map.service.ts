@@ -9,8 +9,10 @@ export class MapService {
 
   private markerAdd = new Subject<Parada>();
   private markerErase = new Subject<Parada>();
+  private markerReorder = new Subject<void>();
   markerAdd$ = this.markerAdd.asObservable();
   markerErase$ = this.markerErase.asObservable();
+  markerReorder$ = this.markerReorder.asObservable();
 
   addMarker(lugar: Parada) {
     this.markerAdd.next(lugar);
@@ -18,5 +20,9 @@ export class MapService {
 
   eraseMarker(lugar: Parada) {
     this.markerErase.next(lugar);
+  }
+
+  reorder() {
+    this.markerReorder.next();
   }
 }
