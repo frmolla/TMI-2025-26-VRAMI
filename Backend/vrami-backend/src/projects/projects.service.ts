@@ -1,5 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProjectDto, RouteLocationDto } from './dto/create-project.dto';
+import * as fs from 'fs';
+import * as path from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 export interface RouteSegment {
   from: RouteLocationDto;
@@ -74,7 +80,9 @@ export class ProjectsService {
     return { message: `Project ${id} deleted successfully` };
   }
 
-  private normalizeLocations(locations: RouteLocationDto[]): RouteLocationDto[] {
+  private normalizeLocations(
+    locations: RouteLocationDto[],
+  ): RouteLocationDto[] {
     return locations
       .filter((location) => this.isValidLocation(location))
       .map((location) => ({
@@ -87,7 +95,8 @@ export class ProjectsService {
 
   private isValidLocation(location: RouteLocationDto | undefined): boolean {
     if (!location) return false;
-    const hasName = typeof location.name === 'string' && location.name.trim().length > 0;
+    const hasName =
+      typeof location.name === 'string' && location.name.trim().length > 0;
     const hasLat = Number.isFinite(Number(location.lat));
     const hasLng = Number.isFinite(Number(location.lng));
     return hasName && hasLat && hasLng;
@@ -158,11 +167,35 @@ export class ProjectsService {
 
     const a =
       Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(lat1)) *
-        Math.cos(toRad(lat2)) *
-        Math.sin(dLng / 2) ** 2;
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return earthRadiusKm * c;
+  }
+
+  async processVideo(id: string, file: any) {
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
+
+    const inputPath = path.join(uploadsDir, `raw_${id}.webm`);
+    const outputPath = path.join(uploadsDir, `final_${id}.mp4`);
+
+    fs.writeFileSync(inputPath, file.buffer);
+
+    try {
+      console.log('Convirtiendo a MP4 con FFmpeg...');
+      // Comando para que cualquier dispositivo pueda leer el MP4
+      await execAsync(
+        `ffmpeg -i "${inputPath}" -c:v libx264 -preset slow -crf 18 -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -pix_fmt yuv420p -y "${outputPath}"`,
+      );
+
+      console.log('✅ ¡Vídeo MP4 generado exitosamente en:', outputPath);
+      fs.unlinkSync(inputPath); // Borra el archivo .webm temporal
+
+      return outputPath;
+    } catch (error) {
+      console.error('Error en FFmpeg:', error);
+      throw new Error('Falló la conversión del vídeo');
+    }
   }
 }

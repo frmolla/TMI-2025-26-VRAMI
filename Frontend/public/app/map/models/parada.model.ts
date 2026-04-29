@@ -3,4 +3,5 @@ export interface Parada {
     lat: number;
     lng: number;
     pos: number;
+    pais?: string;
 }

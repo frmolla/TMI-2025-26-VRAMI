@@ -161,7 +161,6 @@ ul.cdk-drop-list-dragging .parada-item:not(.cdk-drag-placeholder) {
 }
 .buscador-container {
     position: relative;
-    margin-bottom: 10px;
 }
 .sugerencias-lista {
     position: absolute;
@@ -194,4 +193,81 @@ ul.cdk-drop-list-dragging .parada-item:not(.cdk-drag-placeholder) {
 
 .sugerencias-lista li:last-child {
     border-bottom: none;
+}
+.resumen-itinerario {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+
+    .dato-itinerario {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        font-size: 0.9rem;
+
+        i {
+            color: #4ade80; // Un verde llamativo para los iconos
+        }
+    }
+}
+
+// --- PANTALLA DE GRABACIÓN ---
+.recording-overlay {
+    position: fixed; // Para que ocupe toda la pantalla del navegador
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999; // Para que quede por encima de los menús y el mapa
+
+    // Aquí está la magia: un fondo oscuro semitransparente con desenfoque
+    background-color: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(6px); // Desenfoque suave para que se intuya la animación detrás
+    -webkit-backdrop-filter: blur(6px); // Soporte para Safari
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .recording-card {
+        background: rgba(15, 23, 42, 0.85); // Tarjeta un poco más oscura
+        border: 1px solid rgba(56, 189, 248, 0.3); // Borde azulito neón
+        border-radius: 24px;
+        padding: 3rem 4rem;
+        text-align: center;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        color: #f8fafc;
+        animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+        h2 {
+            margin: 1.5rem 0 0.5rem;
+            font-weight: 700;
+            font-size: 1.6rem;
+        }
+
+        p {
+            color: #94a3b8;
+            margin: 0;
+            font-size: 1.1rem;
+        }
+    }
+}
+
+// Animación para que la tarjeta aparezca con un rebote suave
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }

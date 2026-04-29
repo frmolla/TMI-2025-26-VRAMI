@@ -28,7 +28,8 @@ private destroy$ = new Subject<void>();
 constructor(private mapService: MapService) {}
 routeMode: 'driving' | 'air' | 'auto' = 'air';
 
-currentAnimIndex = 0;       
+currentAnimIndex = 0;
+animationFrameId: any = null;
 lineGeoJSON: GeoJSON.Feature<GeoJSON.LineString> | null = null;
 routeSource: mapboxgl.GeoJSONSource | null = null;
 
@@ -46,6 +47,31 @@ ngOnInit(): void {
   this.mapService.markerReorder$.subscribe(() => {
     this.markerReorder();
   });
+
+  // NUEVO: Escuchamos la orden de animar
+    this.mapService.replayAnimation$.subscribe(() => {
+      if (this.points.length < 2) return;
+      // 1. DETENEMOS CUALQUIER ANIMACIÓN ANTIGUA
+      if (this.animationFrameId) {
+          cancelAnimationFrame(this.animationFrameId);
+          this.animationFrameId = null;
+      }
+
+      // 2. BORRAMOS LOS DATOS VIEJOS DE LA RUTA
+      if (this.lineGeoJSON) {
+          this.lineGeoJSON.geometry.coordinates = []; // Limpiamos las coordenadas
+          if (this.routeSource) {
+              this.routeSource.setData(this.lineGeoJSON); // Actualizamos el mapa para que se vea vacío
+          }
+      }
+
+      // 3. Reiniciamos el índice y lanzamos la nueva animación
+      this.currentAnimIndex = 0;
+      if (this.routeMode === 'air') {
+          const coords = this.getAirRouteCoords();
+          this.animateCameraAndRouteContinuous(coords);
+      }
+    });
 }
 
 ngOnDestroy() {
@@ -61,6 +87,7 @@ initMap() {
     style: this.mapStyle,
     center: [20, 50],
     zoom: 3,
+    preserveDrawingBuffer: true,
   });
 
   this.map.on('load', () => {
@@ -252,10 +279,17 @@ animateCameraAndRouteContinuous(coords: [number, number][]) {
     if (!lineGeoJSON || !routeSource) return;
 
     let i = this.currentAnimIndex;
-
+    // Si hay una animación vieja corriendo, la destruimos.
+    if (this.animationFrameId) {
+        cancelAnimationFrame(this.animationFrameId);
+    }
     const step = () => {
         if (i >= coords.length - 1) {
             this.currentAnimIndex = i;
+            //nuevo!
+            this.map.once('idle', () => {
+                this.mapService.notifyAnimationFinished();
+            });
             return;
         }
 
@@ -282,7 +316,7 @@ animateCameraAndRouteContinuous(coords: [number, number][]) {
         i++;
         this.currentAnimIndex = i;
 
-        requestAnimationFrame(step);
+        this.animationFrameId = requestAnimationFrame(step);
     };
 
     step();
