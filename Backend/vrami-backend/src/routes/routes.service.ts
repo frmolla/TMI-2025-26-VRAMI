@@ -20,4 +20,11 @@ export class RoutesService {
 
     return fullLine.geometry.coordinates as [number, number][];
   }
+
+  async calculateAirRoute(
+    points: [number, number][],
+  ): Promise<[number, number][]> {
+
+    return points;
+  }
 }
