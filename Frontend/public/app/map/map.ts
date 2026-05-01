@@ -4,10 +4,9 @@ import { IPoints } from './models/points.model';
 import { mapIcons } from './map-icons';
 import { Parada } from './models/parada.model';
 import { MapService } from '@/services/map.service';
-import { catchError, EMPTY, of, Subject, takeUntil, timeout } from 'rxjs';
+import { catchError, EMPTY, firstValueFrom, of, Subject, takeUntil, timeout } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import * as turf from '@turf/turf';
-
 
 @Component({
   selector: 'app-map',
@@ -33,6 +32,9 @@ animationFrameId: any = null;
 lineGeoJSON: GeoJSON.Feature<GeoJSON.LineString> | null = null;
 routeSource: mapboxgl.GeoJSONSource | null = null;
 
+private queue: [number, number][][] = [];
+private isAnimating = false;
+
 ngOnInit(): void {
   this.initMap();
   
@@ -48,16 +50,15 @@ ngOnInit(): void {
     this.markerReorder();
   });
 
-  // NUEVO: Escuchamos la orden de animar
     this.mapService.replayAnimation$.subscribe(() => {
       if (this.points.length < 2) return;
-      // 1. DETENEMOS CUALQUIER ANIMACIÓN ANTIGUA
+      // Detenemos animaciones antiguas
       if (this.animationFrameId) {
           cancelAnimationFrame(this.animationFrameId);
           this.animationFrameId = null;
       }
 
-      // 2. BORRAMOS LOS DATOS VIEJOS DE LA RUTA
+      // Borramos datos de rutas antiguas
       if (this.lineGeoJSON) {
           this.lineGeoJSON.geometry.coordinates = []; // Limpiamos las coordenadas
           if (this.routeSource) {
@@ -65,11 +66,12 @@ ngOnInit(): void {
           }
       }
 
-      // 3. Reiniciamos el índice y lanzamos la nueva animación
+      // Reiniciamos el índice y lanzamos la nueva animación
       this.currentAnimIndex = 0;
       if (this.routeMode === 'air') {
-          const coords = this.getAirRouteCoords();
-          this.animateCameraAndRouteContinuous(coords);
+          this.getAirSegmentFromApi().then(coords => {
+            this.animateCameraAndRouteContinuous(coords);
+          });
       }
     });
 }
@@ -94,62 +96,146 @@ initMap() {
     this.renderMarkers();
     this.updateRoute();
   });
-
-  // this.map.on('click', (e) => {
-  //   const coords = e.lngLat;
-  //   this.points.push({ coords: [coords.lng, coords.lat], status: 'active' })
-  //   console.log(`click`)
-  //   this.renderMarkers()
-  // });
 }
 
-addMarker(lugar: Parada){
-    this.points.push({ nombre: lugar.nombre, coords: [lugar.lng, lugar.lat], status: 'active', orden: lugar.pos })
-    console.log(`addMarker`)
+addMarker(lugar: Parada) {
+  this.points.push({
+    nombre: lugar.nombre,
+    coords: [lugar.lng, lugar.lat],
+    status: 'active',
+    orden: lugar.pos
+  });
 
-    // setTimeout(() => {
-    //   this.map.flyTo({
-    //     center: [lugar.lng, lugar.lat],
-    //     zoom: 5,      // zoom al destino
-    //     speed: 0.75,  // velocidad de la animación
-    //     curve: 1.4,   // como se describe la curva
-    //     easing: (t) => t,
-    //     essential: true
-    //   });
-    // }, 200);
-    
-    //this.updateRoute();
-    this.renderMarkers()
+  this.renderMarkers();
 
-    if (this.routeMode === 'air' && this.points.length >= 2) {
-        const coords = this.getAirRouteCoords();
-        setTimeout(() => {
-            this.animateCameraAndRouteContinuous(coords);
-        }, 200);
-    } else {
-        setTimeout(() => {
-            this.map.flyTo({
-                center: [lugar.lng, lugar.lat],
-                zoom: 5,
-                speed: 0.75,
-                curve: 1.4,
-                easing: t => t,
-                essential: true
-            });
-        }, 200);
+  if (this.routeMode !== 'air') {
+    this.map.flyTo({
+      center: [lugar.lng, lugar.lat],
+      zoom: 5,
+      speed: 0.75,
+      curve: 1.4,
+      easing: t => t,
+      essential: true
+    });
+    return;
+  }
+
+  if (this.points.length === 1) {
+    const first = this.points[0];
+
+    this.map.flyTo({
+      center: first.coords,
+      zoom: 6,
+      speed: 0.8,
+      curve: 1.4,
+      essential: true
+    });
+
+    return;
+  }
+
+  this.getAirSegmentFromApi().then(coords => {
+    this.queue.push(coords);
+    this.runQueue();
+  });
+}
+
+private runQueue() {
+  if (this.isAnimating) return;
+  if (this.queue.length === 0) return;
+
+  this.isAnimating = true;
+
+  const next = this.queue.shift()!;
+
+  this.animateSegment(next).then(() => {
+    this.isAnimating = false;
+    this.runQueue(); // sigue con siguiente segmento
+  });
+}
+
+animateSegment(coords: [number, number][]): Promise<void> {
+  return new Promise(resolve => {
+    if (!coords || coords.length < 2) {
+      resolve();
+      return;
     }
+
+    if (!this.lineGeoJSON) {
+      this.lineGeoJSON = {
+        type: 'Feature',
+        properties: {},
+        geometry: { type: 'LineString', coordinates: [] }
+      };
+    }
+
+    if (!this.routeSource) {
+      this.map.addSource('route', {
+        type: 'geojson',
+        data: this.lineGeoJSON
+      });
+
+      this.map.addLayer({
+        id: 'route-line',
+        type: 'line',
+        source: 'route',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': '#ff6b6b',
+          'line-width': 4
+        }
+      });
+
+      this.routeSource = this.map.getSource('route') as mapboxgl.GeoJSONSource;
+    }
+
+    let i = 0;
+
+    const step = () => {
+      if (i >= coords.length - 1) {
+        resolve(); // termina segmento
+        return;
+      }
+
+      const current = coords[i];
+      const next = coords[i + 1];
+
+      const bearing = turf.bearing(
+        turf.point(current),
+        turf.point(next)
+      );
+
+      this.lineGeoJSON!.geometry.coordinates.push(current);
+      this.routeSource!.setData(this.lineGeoJSON!);
+
+      this.map.easeTo({
+        center: current,
+        bearing,
+        pitch: 60,
+        zoom: 5,
+        duration: 120
+      });
+
+      i++;
+      requestAnimationFrame(step);
+    };
+
+    step();
+  });
 }
 
-eraseMarker(lugar: Parada){
-    this.points = this.points.filter(p => p.nombre !== lugar.nombre);
-    console.log(`eraseMarker`)
-    
-    if (this.points.length < 2) 
-      this.clearRoute();
-    else
-      this.updateRoute();
+eraseMarker(lugar: Parada) {
+  this.points = this.points.filter(p => p.nombre !== lugar.nombre);
 
-    this.renderMarkers()
+  if (this.points.length < 2) {
+    this.clearRoute();
+  }
+
+  this.updateRoute();
+  this.renderMarkers();
 }
 
 markerReorder() {
@@ -164,88 +250,29 @@ markerReorder() {
     this.renderMarkers(); 
 }
 
-getAirRouteCoords(): [number, number][] {
-    if (this.points.length < 2) return [];
+getAirSegmentFromApi(): Promise<[number, number][]> {
+  const lastTwo = this.points.slice(-2);
 
-    let fullLine: any = null;
-
-    for (let i = 0; i < this.points.length - 1; i++) {
-        const start = turf.point(this.points[i].coords);
-        const end = turf.point(this.points[i + 1].coords);
-
-        const arc = turf.greatCircle(start, end, { npoints: 150 });
-
-        if (!fullLine) fullLine = arc;
-        else fullLine.geometry.coordinates.push(...arc.geometry.coordinates);
-    }
-
-    return fullLine.geometry.coordinates as [number, number][];
-}
-
-animateCameraAndRoute(coords: [number, number][]) {
-    if (!coords || coords.length < 2) return;
-
-    // Inicializamos línea vacía
-    const lineGeoJSON: GeoJSON.Feature<GeoJSON.LineString> = {
-        type: 'Feature',
-        properties: {},
-        geometry: { type: 'LineString', coordinates: [] }
-    };
-
-    // Añadimos fuente si no existe
-    if (!this.map.getSource('route')) {
-        this.map.addSource('route', { type: 'geojson', data: lineGeoJSON });
-        this.map.addLayer({
-            id: 'route-line',
-            type: 'line',
-            source: 'route',
-            layout: { 'line-join': 'round', 'line-cap': 'round' },
-            paint: {
-                'line-color': '#ff6b6b',
-                'line-width': 4,
-                'line-dasharray': [2, 2],
-                'line-opacity': 0.8
-            }
-        });
-    }
-
-    const routeSource = this.map.getSource('route') as mapboxgl.GeoJSONSource;
-
-    let i = 0;
-
-    const step = () => {
-        if (i >= coords.length - 1) return;
-
-        const current = coords[i];
-        const next = coords[i + 1];
-
-        if (!current || !next) return;
-
-        const bearing = turf.bearing(turf.point(current), turf.point(next));
-
-        // Actualizamos cámara
-        this.map.easeTo({
-            center: [current[0], current[1]],
-            bearing,
-            pitch: 60,
-            zoom: 5,
-            duration: 50,
-            easing: t => t
-        });
-
-        // Actualizamos línea progresiva
-        lineGeoJSON.geometry.coordinates.push(current);
-        routeSource.setData(lineGeoJSON); // <--- así es correcto
-
-        i++;
-        requestAnimationFrame(step);
-    };
-
-    step();
+  return firstValueFrom(
+    this.http.post<[number, number][]>(
+      'http://localhost:3000/routes/air-route',
+      { points: lastTwo }
+    )
+  );
 }
 
 animateCameraAndRouteContinuous(coords: [number, number][]) {
-    if (!coords || coords.length < 2) return;
+  if (!coords || coords.length < 2) return;
+
+  this.resetRouteLayer();
+  this.ensureRouteLayer();
+
+   this.currentAnimIndex = 0;
+
+   if (this.animationFrameId) {
+        cancelAnimationFrame(this.animationFrameId);
+        this.animationFrameId = null;
+    }
 
     // Inicializamos línea vacía la primera vez
     if (!this.lineGeoJSON) {
@@ -274,8 +301,8 @@ animateCameraAndRouteContinuous(coords: [number, number][]) {
         this.routeSource = this.map.getSource('route') as mapboxgl.GeoJSONSource;
     }
 
-    const lineGeoJSON = this.lineGeoJSON;
-    const routeSource = this.routeSource;
+    const lineGeoJSON = this.lineGeoJSON!;
+    const routeSource = this.routeSource!;
     if (!lineGeoJSON || !routeSource) return;
 
     let i = this.currentAnimIndex;
@@ -362,55 +389,33 @@ renderMarkers() {
     return wrapper;
   }
 
-  // drawAirRoute() {
-  //   const coords = this.points.map(p => p.coords);
-
-  //   if (coords.length >= 2) {
-  //     let fullLine: any = null;
-
-  //     for (let i = 0; i < coords.length - 1; i++) {
-  //       const start = turf.point(coords[i]);
-  //       const end = turf.point(coords[i + 1]);
-
-  //       const arc = turf.greatCircle(start, end, {
-  //         npoints: 150, 
-  //       });
-
-  //       if (!fullLine) {
-  //         fullLine = arc;
-  //       } else {
-  //         fullLine.geometry.coordinates.push(...arc.geometry.coordinates);
-  //       }
-  //     }
-
-  //     this.drawRoute(fullLine.geometry);
-  //   }    
-  // }
-
-  drawAirRoute() {
-      const coords = this.getAirRouteCoords();
-      if(coords.length >= 2){
-          this.drawRoute({ type: 'LineString', coordinates: coords });
-          return coords;
-      }
-      return;
-  }
-
-  drawRoute(geometry: any) {
+  private resetRouteLayer() {
     if (this.map.getLayer('route-line')) {
       this.map.removeLayer('route-line');
     }
+
     if (this.map.getSource('route')) {
       this.map.removeSource('route');
     }
 
+    this.routeSource = null;
+
+    this.lineGeoJSON = {
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'LineString',
+        coordinates: []
+      }
+    };
+  }
+
+  private ensureRouteLayer() {
+    if (this.routeSource) return;
+
     this.map.addSource('route', {
       type: 'geojson',
-      data: {
-        type: 'Feature',
-        properties: {},
-        geometry,
-      },
+      data: this.lineGeoJSON!
     });
 
     this.map.addLayer({
@@ -419,110 +424,70 @@ renderMarkers() {
       source: 'route',
       layout: {
         'line-join': 'round',
-        'line-cap': 'round',
+        'line-cap': 'round'
       },
       paint: {
-        'line-color': this.routeMode === 'air' ? '#ff6b6b' : '#3b9ddd',
-        'line-width': 5,
-        'line-dasharray': this.routeMode === 'air' ? [2, 2] : [1, 0],
-      },
+        'line-color': '#ff6b6b',
+        'line-width': 4,
+        'line-opacity': 0.85
+      }
     });
+
+    this.routeSource = this.map.getSource('route') as mapboxgl.GeoJSONSource;
   }
 
-  // updateRoute() {
-  //   if (this.points.length < 2) {
-  //     if (this.map.getLayer('route-line')) {
-  //       this.map.removeLayer('route-line');
-  //     }
-  //     if (this.map.getSource('route')) {
-  //       this.map.removeSource('route');
-  //     }
-  //     return;
-  //   }
+  async drawAirRoute() {
+      const coords = await this.getAirSegmentFromApi();
+      if(coords.length >= 2){
+          this.drawRoute({ type: 'LineString', coordinates: coords });
+          return coords;
+      }
+      return;
+  }
 
-  //   const coordsString = this.points.map((p) => p.coords.join(',')).join(';');
+  drawRoute(geometry: any) {
+    this.resetRouteLayer();
+    this.ensureRouteLayer();
 
-  //   const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordsString}?geometries=geojson&access_token=${this.accessToken}`;
+    this.lineGeoJSON!.geometry = geometry;
 
-  //   this.http.get<any>(directionsUrl).subscribe((response) => {
-  //     const routeGeoJSON = response.routes[0].geometry;
-
-  //     if (this.map.getLayer('route-line')) {
-  //       this.map.removeLayer('route-line');
-  //     }
-  //     if (this.map.getSource('route')) {
-  //       this.map.removeSource('route');
-  //     }
-
-  //     this.map.addSource('route', {
-  //       type: 'geojson',
-  //       data: {
-  //         type: 'Feature',
-  //         properties: {},
-  //         geometry: routeGeoJSON,
-  //       },
-  //     });
-
-  //     this.map.addLayer({
-  //       id: 'route-line',
-  //       type: 'line',
-  //       source: 'route',
-  //       layout: {
-  //         'line-join': 'round',
-  //         'line-cap': 'round',
-  //       },
-  //       paint: {
-  //         'line-color': '#3b9ddd',
-  //         'line-width': 5,
-  //       },
-  //     });
-  //   });
-  // }
+    this.routeSource!.setData(this.lineGeoJSON!);
+  }
 
   updateRoute() {
-    // menos de dos punto no es una ruta
     if (this.points.length < 2) {
       this.clearRoute();
       return;
     }
 
-    // modo aéreo
     if (this.routeMode === 'air') {
       this.drawAirRoute();
       return;
     }
 
     const coordsString = this.points.map(p => p.coords.join(',')).join(';');
+
     const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordsString}?geometries=geojson&access_token=${this.accessToken}`;
 
     this.http.get<any>(url).pipe(
-      timeout(this.routeMode === 'auto' ? 500 : 5000), // 👈 más tolerante si es manual
       catchError(() => {
-        if (this.routeMode === 'auto') {
-          this.drawAirRoute();
-        }
+        this.drawAirRoute();
         return EMPTY;
       })
-    ).subscribe(response => {
-      if (!response?.routes?.length) {
-        if (this.routeMode === 'auto') {
-          this.drawAirRoute();
-        }
-        return;
-      }
+    ).subscribe(res => {
+      if (!res?.routes?.length) return;
 
-      this.drawRoute(response.routes[0].geometry);
+      this.drawRoute(res.routes[0].geometry);
     });
   }
 
   clearRoute() {
-    if (this.map.getLayer('route-line')) {
-      this.map.removeLayer('route-line');
-    }
+    this.resetRouteLayer();
 
-    if (this.map.getSource('route')) {
-      this.map.removeSource('route');
-    }
+    this.animationFrameId = null;
+    this.queue = [];
+    this.isAnimating = false;
+    this.currentAnimIndex = 0;
   }
 }
 
