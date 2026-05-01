@@ -47,33 +47,23 @@ ngOnInit(): void {
   });
 
   this.mapService.markerReorder$.subscribe(() => {
-    this.markerReorder();
-  });
-
-    this.mapService.replayAnimation$.subscribe(() => {
-      if (this.points.length < 2) return;
-      // Detenemos animaciones antiguas
-      if (this.animationFrameId) {
-          cancelAnimationFrame(this.animationFrameId);
-          this.animationFrameId = null;
-      }
-
-      // Borramos datos de rutas antiguas
-      if (this.lineGeoJSON) {
-          this.lineGeoJSON.geometry.coordinates = []; // Limpiamos las coordenadas
-          if (this.routeSource) {
-              this.routeSource.setData(this.lineGeoJSON); // Actualizamos el mapa para que se vea vacío
-          }
-      }
-
-      // Reiniciamos el índice y lanzamos la nueva animación
-      this.currentAnimIndex = 0;
-      if (this.routeMode === 'air') {
-          this.getAirSegmentFromApi().then(coords => {
-            this.animateCameraAndRouteContinuous(coords);
-          });
-      }
+      this.markerReorder();
     });
+
+      this.mapService.replayAnimation$.subscribe(async () => {
+    if (this.points.length < 2) return;
+
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+    }
+
+    this.resetRouteLayer();
+
+    if (this.routeMode === 'air') {
+      const coords = await this.getAirRouteFromApi();
+      this.animateCameraAndRouteContinuous(coords);
+    }
+  });
 }
 
 ngOnDestroy() {
@@ -257,6 +247,15 @@ getAirSegmentFromApi(): Promise<[number, number][]> {
     this.http.post<[number, number][]>(
       'http://localhost:3000/routes/air-route',
       { points: lastTwo }
+    )
+  );
+}
+
+getAirRouteFromApi(): Promise<[number, number][]> {
+  return firstValueFrom(
+    this.http.post<[number, number][]>(
+      'http://localhost:3000/routes/air-route',
+      { points: this.points }
     )
   );
 }
@@ -454,14 +453,18 @@ renderMarkers() {
     this.routeSource!.setData(this.lineGeoJSON!);
   }
 
-  updateRoute() {
+  async updateRoute() {
     if (this.points.length < 2) {
       this.clearRoute();
       return;
     }
 
     if (this.routeMode === 'air') {
-      this.drawAirRoute();
+      const coords = await this.getAirRouteFromApi();
+      this.drawRoute({
+        type: 'LineString',
+        coordinates: coords
+      });
       return;
     }
 
