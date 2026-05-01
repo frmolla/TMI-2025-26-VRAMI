@@ -31,6 +31,12 @@ npm install -g @angular/cli
 npm install -g @nestjs/cli
 ```
 
+```bash
+### Instalación de FFmpeg:
+### REINICIAR VISUAL DESPUES DE INSTALAR
+
+winget install Gyan.FFmpeg
+```
 ---
 
 ## Frontend — Angular
