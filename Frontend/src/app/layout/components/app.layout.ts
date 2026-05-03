@@ -1,15 +1,15 @@
-import {Component, OnDestroy, Renderer2, ViewChild} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {NavigationEnd, Router, RouterModule} from '@angular/router';
-import {filter, Subscription} from 'rxjs';
-import {AppTopbar} from './app.topbar';
-import {LayoutService} from '@/layout/service/layout.service';
-import {AppConfigurator} from './app.configurator';
-import {AppBreadcrumb} from './app.breadcrumb';
-import {AppSidebar} from './app.sidebar';
-import {ToastModule} from 'primeng/toast';
-import {MessageService} from 'primeng/api';
-import {AppProfileMenu} from "@/layout/components/app.profilemenu";
+import { Component, OnDestroy, Renderer2, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { filter, Subscription } from 'rxjs';
+import { AppTopbar } from './app.topbar';
+import { LayoutService } from '@/layout/service/layout.service';
+import { AppConfigurator } from './app.configurator';
+import { AppBreadcrumb } from './app.breadcrumb';
+import { AppSidebar } from './app.sidebar';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { AppProfileMenu } from '@/layout/components/app.profilemenu';
 
 @Component({
     selector: 'app-layout',
@@ -17,13 +17,7 @@ import {AppProfileMenu} from "@/layout/components/app.profilemenu";
     imports: [CommonModule, AppTopbar, RouterModule, AppConfigurator, AppBreadcrumb, ToastModule, AppProfileMenu],
     template: `
         <div class="layout-container" [ngClass]="containerClass">
-            <div class="layout-content-wrapper">
-                <div app-topbar></div>
-
-                <div class="content-breadcrumb">
-                    <div app-breadcrumb></div>
-                </div>
-
+            <div class="layout-content-wrapper" style="padding: 0 !important">
                 <div class="layout-content">
                     <router-outlet></router-outlet>
                 </div>
