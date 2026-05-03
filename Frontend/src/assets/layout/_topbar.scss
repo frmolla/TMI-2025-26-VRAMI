@@ -16,28 +16,250 @@
         border-color: transparent;
     }
 }
+
+// ────────────────────────────────────────────────────
+// Floating pill Topbar
+// ────────────────────────────────────────────────────
 .layout-topbar {
-    margin-bottom: 2rem;
+    position: sticky;
+    top: 0.85rem;
+    z-index: 100;
+    // Floating: shrinks to content + padding, centered horizontally
+    width: fit-content;
+    max-width: calc(100% - 3rem);
+    margin: 0 auto;
+    border-radius: 3rem;
+    background: var(--glass-topbar-bg);
+    background-image: var(--topbar-gradient);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--topbar-shadow);
+    padding: 0.4rem 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: background 0.3s, box-shadow 0.3s;
+}
+
+// ── Shared icon button ────────────────────────────────
+.topbar-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg-subtle);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: var(--text-color);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, color 0.2s;
+
+    i { font-size: 1rem; }
+}
+
+// ── Profile button — teal accent ──────────────────────
+.topbar-profile-btn {
+    &:hover {
+        background: rgba(45, 212, 191, 0.12);
+        border-color: var(--glass-accent);
+        color: var(--glass-accent);
+        box-shadow: 0 0 14px rgba(45, 212, 191, 0.25);
+    }
+}
+
+// ── Logout button — red accent ────────────────────────
+.topbar-logout-btn {
+    border-color: rgba(239, 68, 68, 0.25);
+    color: rgba(239, 68, 68, 0.75);
+
+    &:hover {
+        background: rgba(239, 68, 68, 0.12);
+        border-color: rgba(239, 68, 68, 0.55);
+        color: rgb(239, 68, 68);
+        box-shadow: 0 0 14px rgba(239, 68, 68, 0.2);
+    }
+}
+
+// ── Divider ───────────────────────────────────────────
+.topbar-divider {
+    width: 1px;
+    height: 1.4rem;
+    background: var(--glass-border);
+    margin: 0 0.15rem;
+    flex-shrink: 0;
+}
+
+// ── Center nav ────────────────────────────────────────
+.topbar-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.topbar-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 2rem;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-color-secondary, rgba(255,255,255,0.55));
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+
+    i { font-size: 0.85rem; }
+
+    &:hover {
+        background: var(--glass-bg-subtle);
+        border-color: var(--glass-border);
+        color: var(--text-color);
+    }
+
+    &.active {
+        background: rgba(45, 212, 191, 0.1);
+        border-color: rgba(45, 212, 191, 0.35);
+        color: var(--glass-accent);
+        box-shadow: 0 0 12px rgba(45, 212, 191, 0.15);
+    }
+}
+
+
+// ────────────────────────────────────────────────────
+// Glass Topbar
+// ────────────────────────────────────────────────────
+.layout-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+
+    // Glassmorphic background — visible on both light and dark
+    background: var(--glass-topbar-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+
+    // Subtle gradient overlay so it stands out on dark backgrounds
+    background-image: var(--topbar-gradient);
+
+    // Bottom border with accent-gradient glow
+    border-bottom: 1px solid var(--glass-border);
+    box-shadow: var(--topbar-shadow);
+
+    padding: 0.4rem 2rem;
+    margin-bottom: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: background 0.3s, box-shadow 0.3s;
 
     .topbar-start {
         display: flex;
         align-items: center;
         position: relative;
         z-index: 999;
+    }
 
-        .topbar-menubutton {
-            margin-right: 1.5rem;
-            width: 2.5rem;
-            height: 2.5rem;
+    .topbar-menubutton {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        margin-right: 1.5rem;
+        border-radius: 50%;
+        border: 1px solid var(--glass-border);
+        background: var(--glass-bg-subtle);
+        color: var(--text-color);
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
 
-            i {
-                font-size: 1.25rem;
-            }
+        i { font-size: 1.1rem; }
+
+        &:hover {
+            background: var(--glass-bg);
+            border-color: var(--glass-accent);
+            box-shadow: 0 0 10px rgba(45, 212, 191, 0.2);
         }
     }
+
+    // ── Right-side action cluster ──
+    .topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .topbar-avatar-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.25rem 0.65rem;
+        border-radius: 2rem;
+        border: 1px solid var(--glass-border);
+        background: var(--glass-bg-subtle);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        text-decoration: none;
+        color: var(--text-color);
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+
+        i { font-size: 0.8rem; opacity: 0.7; }
+
+        &:hover {
+            background: var(--glass-bg);
+            border-color: var(--glass-accent);
+            box-shadow: 0 0 12px rgba(45, 212, 191, 0.2);
+        }
+
+        .topbar-avatar-chevron { font-size: 0.65rem; opacity: 0.4; }
+    }
+
+    .topbar-divider {
+        width: 1px;
+        height: 1.4rem;
+        background: var(--glass-border);
+        margin: 0 0.2rem;
+        flex-shrink: 0;
+    }
+
+    .topbar-logout-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.38rem 0.85rem;
+        border-radius: 2rem;
+        border: 1px solid rgba(239, 68, 68, 0.28);
+        background: rgba(239, 68, 68, 0.06);
+        color: rgba(239, 68, 68, 0.78);
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+        transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+
+        i { font-size: 0.82rem; }
+
+        &:hover {
+            background: rgba(239, 68, 68, 0.14);
+            border-color: rgba(239, 68, 68, 0.55);
+            color: rgb(239, 68, 68);
+            box-shadow: 0 0 14px rgba(239, 68, 68, 0.18);
+        }
+    }
+
 
     .topbar-menu {
         display: flex;
@@ -115,7 +337,6 @@
                         width: 100%;
                         position: relative;
                         border-radius: 40px;
-
                     }
 
                     span {
@@ -174,31 +395,13 @@
 }
 
 @keyframes clippath {
-    0% {
-        clip-path: inset(0 0 98% 0);
-    }
-    12.5% {
-        clip-path: inset(0 0 60% 0);
-    }
-    25% {
-        clip-path: inset(0 98% 0 0);
-    }
-    37.5% {
-        clip-path: inset(0 60% 0 0);
-    }
-    50% {
-        clip-path: inset(98% 0 0 0);
-    }
-    62.5% {
-        clip-path: inset(60% 0 0 0);
-    }
-    75% {
-        clip-path: inset(0 0 0 98%);
-    }
-    87.5% {
-        clip-path: inset(0 0 0 60%);
-    }
-    100% {
-        clip-path: inset(0 0 98% 0);
-    }
+    0%    { clip-path: inset(0 0 98% 0); }
+    12.5% { clip-path: inset(0 0 60% 0); }
+    25%   { clip-path: inset(0 98% 0 0); }
+    37.5% { clip-path: inset(0 60% 0 0); }
+    50%   { clip-path: inset(98% 0 0 0); }
+    62.5% { clip-path: inset(60% 0 0 0); }
+    75%   { clip-path: inset(0 0 0 98%); }
+    87.5% { clip-path: inset(0 0 0 60%); }
+    100%  { clip-path: inset(0 0 98% 0); }
 }

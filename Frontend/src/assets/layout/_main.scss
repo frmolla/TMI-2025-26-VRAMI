@@ -26,9 +26,26 @@ a {
     text-decoration: none;
 }
 
+// ─── Scrollbar styling ───────────────────────────────────────
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--glass-scrollbar-thumb);
+    border-radius: 3px;
+    &:hover { background: var(--glass-scrollbar-thumb-hover); }
+}
+
+// ─── Layout container ────────────────────────────────────────
 .layout-container {
     background: var(--body-bg);
     min-height: 100vh;
+
+    // The decorative SVG overlay (kept for light mode compatibility)
     &:before {
         min-height: 100vh;
         height: 100%;
@@ -36,21 +53,54 @@ a {
         content: '';
         z-index: 0;
         display: block;
-        position: absolute;
+        position: fixed;
         top: 0;
         left: 0;
         background-image: var(--body-image);
         background-repeat: no-repeat;
-        z-index: 0;
+        background-size: cover;
+        pointer-events: none;
     }
 
+    // ── SCROLL FIX: this is the actual scrollable viewport ───
     .layout-content-wrapper {
         position: relative;
         z-index: 1;
         overflow-x: hidden;
-        overflow-y: hidden;
+        overflow-y: auto;      // was: hidden  ← this was blocking scroll
+        height: 100vh;         // gives it a defined scroll container height
         padding: 0 !important;
+
+        // Smooth momentum scroll on iOS
+        -webkit-overflow-scrolling: touch;
     }
+}
+
+// Legacy alias kept in case other pages still use it
+.app-layout-content-wrapper {
+    position: relative;
+    z-index: 1;
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: 100vh;
+    -webkit-overflow-scrolling: touch;
+}
+
+// Centering row for the floating pill topbar
+.topbar-row {
+    display: flex;
+    justify-content: center;
+    padding: 0;
+    pointer-events: none; // row itself invisible to clicks
+
+    > [app-topbar] {
+        pointer-events: auto; // re-enable on actual topbar
+    }
+}
+
+// Prevent double scrollbar at page level
+html, body {
+    overflow: hidden;
 }
 
 img {

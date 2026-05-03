@@ -1,29 +1,137 @@
+// ─── Glassmorphic card ───────────────────────────────────────
 .card {
-    border-radius: 8px;
-    background: var(--surface-card);
-    padding: 16px;
+    border-radius: 1.25rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    padding: 1.5rem;
     box-sizing: border-box;
-    margin-bottom: 16px;
+    margin-bottom: 1.25rem;
+    transition: box-shadow 0.25s, border-color 0.25s;
+
+    &:hover {
+        border-color: rgba(45, 212, 191, 0.2);
+        box-shadow: var(--glass-shadow), 0 0 0 1px rgba(45, 212, 191, 0.1);
+    }
 
     .card-header {
-        font-weight: 500;
+        font-weight: 600;
+        font-size: 1rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        margin-bottom: 0.75rem;
+        color: var(--text-color);
     }
 
     .card-subtitle {
         color: var(--text-color-secondary);
-        font-size: 0.857rem;
+        font-size: 0.82rem;
         font-weight: 500;
-        margin: -1rem 0 1rem 0;
+        margin: -0.5rem 0 1rem 0;
     }
 }
 
+// ─── Toast offset (clear of topbar) ──────────────────────────
 .p-toast {
     &.p-toast-top-right,
     &.p-toast-top-left,
     &.p-toast-top-center {
         top: 70px !important;
     }
+}
+
+// ─── Global glass input standard ─────────────────────────────
+.p-inputtext,
+.p-textarea {
+    background: var(--glass-input-bg) !important;
+    border-color: var(--glass-input-border) !important;
+    border-radius: 0.6rem !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+
+    &:focus {
+        border-color: var(--glass-accent) !important;
+        box-shadow: 0 0 0 3px var(--glass-accent-glow) !important;
+    }
+}
+
+// ─── Override PrimeNG design tokens to make tab backgrounds transparent ─
+// PrimeNG v19 compiles dt('tabs.tablist.background') → var(--p-tabs-tablist-background)
+// and dt('tabs.tabpanel.background') → var(--p-tabs-tabpanel-background).
+// Setting them transparent here means PrimeNG's own injected CSS will render
+// nothing, and our rules below can apply the glass style cleanly.
+:root,
+:root[class*='app-dark'] {
+    --p-tabs-tablist-background: transparent;
+    --p-tabs-tabpanel-background: transparent;
+}
+
+// ─── Global PrimeNG Tabs (p-tabs) glass override ────────────────
+.p-tabs {
+    background: transparent !important;
+
+    // .p-tablist-tab-list is the inner strip that actually holds the tab buttons
+    // and receives PrimeNG's background token. .p-tablist is just a flex wrapper.
+    .p-tablist-tab-list {
+        background: var(--glass-tabs-bg) !important;
+        backdrop-filter: blur(var(--glass-blur));
+        -webkit-backdrop-filter: blur(var(--glass-blur));
+        border-bottom: 1px solid var(--glass-tabs-border) !important;
+        padding: 0 0.5rem;
+    }
+
+    // Active bar — keep PrimeNG's sliding indicator but tint it with our accent
+    .p-tablist-active-bar {
+        background: var(--glass-tab-active) !important;
+    }
+
+    // Individual tab button
+    .p-tab {
+        background: transparent !important;
+        color: var(--glass-tab-text) !important;
+        font-weight: 600 !important;
+        transition: color 0.2s, background 0.2s !important;
+
+        &:not(.p-tab-active):hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: var(--glass-tab-text-hover) !important;
+        }
+    }
+
+    // Active tab text color
+    .p-tab-active,
+    .p-tab[aria-selected='true'] {
+        color: var(--glass-tab-active) !important;
+        background: transparent !important;
+    }
+
+    // Tab panels container — transparent so parent card bg shows through
+    .p-tabpanels {
+        background: transparent !important;
+        padding: 0 !important;
+    }
+
+    .p-tabpanel {
+        background: transparent !important;
+        padding: 0 !important;
+    }
+}
+
+// ─── Section heading standard ────────────────────────────────
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #a5b4fc, #2dd4bf, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 0.35rem;
+}
+
+.section-subtitle {
+    color: var(--text-color-secondary);
+    font-size: 0.9rem;
+    margin: 0 0 1.5rem;
 }

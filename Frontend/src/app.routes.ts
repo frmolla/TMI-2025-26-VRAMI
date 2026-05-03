@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AppLayout } from '@/layout/components/app.layout';
+import { AppSimpleLayout } from '@/layout/components/app.simple-layout';
 
 export const appRoutes: Routes = [
     {
@@ -36,6 +37,17 @@ export const appRoutes: Routes = [
                 path: 'route-preview',
                 data: { breadcrumb: 'Route Preview' },
                 loadComponent: () => import('@/pages/route-preview/route-preview').then((c) => c.RoutePreviewComponent)
+            }
+        ]
+    },
+    {
+        path: 'user',
+        component: AppSimpleLayout,
+        children: [
+            {
+                path: '',
+                data: { breadcrumb: 'User' },
+                loadComponent: () => import('@/pages/user/user').then((c) => c.User)
             }
         ]
     },

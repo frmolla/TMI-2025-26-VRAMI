@@ -14,7 +14,7 @@ import { AppProfileMenu } from '@/layout/components/app.profilemenu';
 @Component({
     selector: 'app-layout',
     standalone: true,
-    imports: [CommonModule, AppTopbar, RouterModule, AppConfigurator, AppBreadcrumb, ToastModule, AppProfileMenu],
+    imports: [CommonModule, RouterModule, AppConfigurator, ToastModule, AppProfileMenu],
     template: `
         <div class="layout-container" [ngClass]="containerClass">
             <div class="layout-content-wrapper" style="padding: 0 !important">
@@ -56,11 +56,14 @@ export class AppLayout implements OnDestroy {
                 });
             }
             if ((this.layoutService.isHorizontal() || this.layoutService.isSlim() || this.layoutService.isSlimPlus()) && !this.menuScrollListener) {
-                this.menuScrollListener = this.renderer.listen(this.appTopbar.appSidebar.appMenu.menuContainer.nativeElement, 'scroll', (event) => {
-                    if (this.layoutService.isDesktop()) {
-                        this.hideMenu();
-                    }
-                });
+                const menuContainer = document.querySelector('.layout-sidebar .layout-menu-container') as HTMLElement;
+                if (menuContainer) {
+                    this.menuScrollListener = this.renderer.listen(menuContainer, 'scroll', (event) => {
+                        if (this.layoutService.isDesktop()) {
+                            this.hideMenu();
+                        }
+                    });
+                }
             }
             if (this.layoutService.layoutState().staticMenuMobileActive) {
                 this.blockBodyScroll();
