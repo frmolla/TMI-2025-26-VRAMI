@@ -55,20 +55,13 @@ export class ProjectsController {
   }
 
   @Post(':id/video')
-  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('video'))
   async uploadVideo(
     @Param('id') id: string,
     @UploadedFile() file: any,
     @Res() res: Response,
-    @Request() req: any,
   ) {
     if (!file) throw new Error('No video file provided');
-
-    const project = await this.projectsService.findOne(id);
-    if (project.user_id !== req.user.id) {
-      throw new Error('Unauthorized');
-    }
 
     console.log(`Recibido vídeo de ${file.size} bytes. Procesando con FFmpeg...`);
     const videoPath = await this.projectsService.processVideo(id, file);
