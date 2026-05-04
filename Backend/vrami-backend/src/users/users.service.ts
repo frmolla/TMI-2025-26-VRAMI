@@ -1,14 +1,24 @@
-import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
   constructor(@InjectRepository(User) private usersRepo: Repository<User>) {}
 
-  async register(email: string, password: string, firstName?: string): Promise<User> {
+  async register(
+    email: string,
+    password: string,
+    firstName?: string,
+  ): Promise<User> {
     if (!email || !email.includes('@')) {
       throw new BadRequestException('Invalid email format');
     }
