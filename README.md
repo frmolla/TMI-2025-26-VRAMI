@@ -81,12 +81,61 @@ cd Backend/vrami-backend
 # 2. Instalar dependencias
 npm install
 
-# 3. Iniciar servidor en modo desarrollo
+# 3. Crear archivo .env (OBLIGATORIO)
+```
+
+### ⚠️ Configuración del archivo `.env`
+
+Crea un archivo llamado **`.env`** en la carpeta `Backend/vrami-backend/` con el siguiente contenido:
+
+```env
+NODE_ENV=development
+PORT=3000
+DATABASE_PATH=./vrami.db
+JWT_SECRET=vrami_secret_key_change_in_production_12345
+JWT_EXPIRE=24h
+```
+
+> **IMPORTANTE:** Sin este archivo, el Backend NO arrancará correctamente.
+
+```bash
+# 4. Iniciar servidor en modo desarrollo
 npm run start:dev
 ```
 
 La API estará disponible en `http://localhost:3000/`.  
 La documentación Swagger se encuentra en `http://localhost:3000/api`.
+
+---
+
+## Base de Datos — SQLite
+
+El proyecto utiliza **SQLite** como base de datos. **No necesitas instalar nada**, el archivo se genera automáticamente.
+
+- Al ejecutar el Backend por primera vez, se crea el archivo `vrami.db` en `Backend/vrami-backend/`.
+- Este archivo contiene las tablas `users` y `projects`.
+- Cada desarrollador tendrá su propia BD local (no se sube a Git).
+- La primera vez no habrá usuarios. Regístrate desde la pantalla de registro en el Frontend.
+
+### Endpoints de Autenticación (sin token)
+
+| Método | URL | Descripción |
+|--------|-----|-------------|
+| POST | `/auth/register` | Registrar un usuario nuevo |
+| POST | `/auth/login` | Iniciar sesión |
+| POST | `/auth/guest` | Entrar como invitado |
+
+### Endpoints de Proyectos (requiere token JWT)
+
+| Método | URL | Descripción |
+|--------|-----|-------------|
+| GET | `/projects` | Obtener mis proyectos |
+| GET | `/projects/:id` | Obtener un proyecto por ID |
+| POST | `/projects` | Crear un nuevo proyecto |
+| DELETE | `/projects/:id` | Eliminar un proyecto |
+| POST | `/projects/:id/video` | Subir y procesar video |
+
+> **Nota:** Los endpoints de proyectos requieren autenticación. El Frontend envía el token JWT automáticamente en cada petición.
 
 ### Comandos más usados
 

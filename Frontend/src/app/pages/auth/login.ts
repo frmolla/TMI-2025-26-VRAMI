@@ -76,18 +76,31 @@ export class Login {
     errorMessage = '';
 
     login() {
-        if (!this.email || !this.password) {
-            this.errorMessage = 'Debes ingresar email y contraseña.';
-            return;
-        }
-        this.authService.login(this.email, this.password);
+    if (!this.email || !this.password) {
+        this.errorMessage = 'Debes ingresar email y contraseña.';
+        return;
+    }
+
+    this.authService.login(this.email, this.password).subscribe({
+        next: () => {
         this.errorMessage = '';
         this.router.navigate(['/']);
+        },
+        error: (error) => {
+        this.errorMessage = error.message || 'Login failed';
+        }
+    });
     }
 
     loginGuest() {
-        this.authService.loginAsGuest();
+    this.authService.loginAsGuest().subscribe({
+        next: () => {
         this.errorMessage = '';
         this.router.navigate(['/']);
+        },
+        error: (error) => {
+        this.errorMessage = 'Guest login failed';
+        }
+    });
     }
 }

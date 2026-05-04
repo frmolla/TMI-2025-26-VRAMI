@@ -1,39 +1,90 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
+
+interface AuthResponse {
+  access_token: string;
+  user: {
+    id: string;
+    email: string;
+    firstName?: string;
+    isGuest: boolean;
+  };
+}
 
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
 export class AuthService {
-    // Usamos sessionStorage para que se borre SOLO al cerrar la pestaña
-    private readonly STORAGE_KEY = 'user';
+  private apiUrl = 'http://localhost:3000/auth';
+  private tokenKey = 'access_token';
+  private userKey = 'user';
 
-    login(email: string, password: string) {
-        const user = {
-            type: 'user',
-            email: email
-        };
+  private http = inject(HttpClient);
+  private userSubject = new BehaviorSubject<any>(this.getStoredUser());
+  user$ = this.userSubject.asObservable();
 
-        sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
-    }
+  login(email: string, password: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { email, password })
+      .pipe(
+        tap((response: AuthResponse) => {
+          if (response.access_token) {
+            localStorage.setItem(this.tokenKey, response.access_token);
+            localStorage.setItem(this.userKey, JSON.stringify(response.user));
+            this.userSubject.next(response.user);
+          }
+        }),
+        catchError(error => {
+          return throwError(() => new Error(error.error?.message || 'Login failed'));
+        })
+      );
+  }
 
-    loginAsGuest() {
-        const user = {
-            type: 'guest'
-        };
+  register(email: string, password: string, firstName?: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, { email, password, firstName })
+      .pipe(
+        tap((response: AuthResponse) => {
+          if (response.access_token) {
+            localStorage.setItem(this.tokenKey, response.access_token);
+            localStorage.setItem(this.userKey, JSON.stringify(response.user));
+            this.userSubject.next(response.user);
+          }
+        }),
+        catchError(error => throwError(() => new Error(error.error?.message || 'Registration failed')))
+      );
+  }
 
-        sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
-    }
+  loginAsGuest(): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/guest`, {})
+      .pipe(
+        tap((response: AuthResponse) => {
+          if (response.access_token) {
+            localStorage.setItem(this.tokenKey, response.access_token);
+            localStorage.setItem(this.userKey, JSON.stringify(response.user));
+            this.userSubject.next(response.user);
+          }
+        }),
+        catchError(error => throwError(() => new Error('Guest login failed')))
+      );
+  }
 
-    getUser() {
-        const data = sessionStorage.getItem(this.STORAGE_KEY);
-        return data ? JSON.parse(data) : null;
-    }
+  getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
+  }
 
-    isLoggedIn(): boolean {
-        return this.getUser() !== null;
-    }
+  getStoredUser(): any {
+    const user = localStorage.getItem(this.userKey);
+    return user ? JSON.parse(user) : null;
+  }
 
-    logout() {
-        sessionStorage.removeItem(this.STORAGE_KEY);
-    }
+  isLoggedIn(): boolean {
+    return !!this.getToken();
+  }
+
+  logout(): void {
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.userKey);
+    this.userSubject.next(null);
+  }
 }
