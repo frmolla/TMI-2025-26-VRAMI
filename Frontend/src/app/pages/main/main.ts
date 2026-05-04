@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '@/services/auth.service';
+import { ProjectService } from '@/services/project.service';
 import { MapComponent } from 'public/app/map/map';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,7 +9,7 @@ import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-
 import { MapService } from '@/services/map.service';
 import { Parada } from 'public/app/map/models/parada.model';
 import { AppTopbar } from '@/layout/components/app.topbar';
-import { Subscription } from 'rxjs';
+import { firstValueFrom, Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-main',
@@ -21,8 +22,11 @@ import { Subscription } from 'rxjs';
 export class Main implements OnInit {
     private authService = inject(AuthService);
     private router = inject(Router);
+    private projectService = inject(ProjectService);
 
     constructor(private mapService: MapService) {}
+
+    currentProjectId: string | null = null;
 
     user: any = null;
 
@@ -147,11 +151,31 @@ export class Main implements OnInit {
         const canvas = document.querySelector('.mapboxgl-canvas') as HTMLCanvasElement;
         if (!canvas) return alert('No se encontró el mapa.');
 
+        if (this.ruta.length < 2) {
+            alert('Añade al menos 2 puntos para crear una ruta.');
+            return;
+        }
+
         this.estaGrabando = true;
         this.tiempoGrabacion = 0;
         this.videoChunks = [];
 
         try {
+            const projectPayload = {
+                name: `Ruta ${new Date().toLocaleString()}`,
+                description: `${this.totalPaises} países, ${this.distanciaTotal} km`,
+                animationType: 'sequential',
+                speed: 1,
+                locations: this.ruta.map((p) => ({
+                    name: p.nombre,
+                    country: p.pais ?? '',
+                    lat: p.lat,
+                    lng: p.lng
+                }))
+            };
+            const savedProject = await firstValueFrom(this.projectService.createProject(projectPayload));
+            this.currentProjectId = savedProject.id;
+
             const stream = canvas.captureStream(60);
             let options: MediaRecorderOptions = {
                 mimeType: 'video/webm',
@@ -205,9 +229,14 @@ export class Main implements OnInit {
         const formData = new FormData();
         formData.append('video', blob, 'captura.webm');
 
+        if (!this.currentProjectId) {
+            alert('No hay proyecto guardado. Vuelve a iniciar la grabación.');
+            return;
+        }
+
         try {
             const token = this.authService.getToken();
-            const response = await fetch('http://localhost:3000/projects/1/video', {
+            const response = await fetch(`http://localhost:3000/projects/${this.currentProjectId}/video`, {
                 method: 'POST',
                 body: formData,
                 headers: token ? { 'Authorization': `Bearer ${token}` } : {}
