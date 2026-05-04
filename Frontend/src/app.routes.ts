@@ -31,6 +31,11 @@ export const appRoutes: Routes = [
                 path: '',
                 data: { breadcrumb: 'E-Commerce Dashboard' },
                 loadComponent: () => import('@/pages/main/main').then((c) => c.Main)
+            },
+            {
+                path: 'route-preview',
+                data: { breadcrumb: 'Route Preview' },
+                loadComponent: () => import('@/pages/route-preview/route-preview').then((c) => c.RoutePreviewComponent)
             }
         ]
     },

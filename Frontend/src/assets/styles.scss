@@ -3,3 +3,9 @@
 @use './layout/layout.scss';
 @use 'primeicons/primeicons.css';
 @use './demo/demo.scss';
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}

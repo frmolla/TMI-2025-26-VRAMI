@@ -195,3 +195,12 @@ Frontend/
 - [Angular CLI — Referencia de comandos](https://angular.dev/tools/cli)
 - [PrimeNG — Componentes UI](https://primeng.org/)
 - [TailwindCSS](https://tailwindcss.com/)
+
+## Ejecutar desde los Laboratorios
+
+ - Desde el CMD 
+ 
+ - cd TMI-2025-26-VRAMI/Frontend
+ - npm intall
+ - npm install -g @angular/cli
+ - npx ng verion
