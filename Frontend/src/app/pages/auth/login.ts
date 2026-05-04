@@ -43,9 +43,7 @@ import { AuthService } from '@/services/auth.service';
 
                     <small *ngIf="errorMessage" class="error-msg">{{ errorMessage }}</small>
 
-                    <a routerLink="/auth/forgotpassword" class="forgot-link">Forgot your password?</a>
-
-                    <div class="actions-container">
+                    <div class="actions-container" style= "padding-top: 25px">
                         <button pButton pRipple label="Login" class="btn-login w-full" (click)="login()"></button>
                         <button pButton pRipple severity="secondary" label="Entrar como invitado" class="btn-guest w-full" (click)="loginGuest()"></button>
                     </div>
@@ -84,7 +82,7 @@ export class Login {
     this.authService.login(this.email, this.password).subscribe({
         next: () => {
         this.errorMessage = '';
-        this.router.navigate(['/']);
+        this.router.navigate(['/user']);
         },
         error: (error) => {
         this.errorMessage = error.message || 'Login failed';

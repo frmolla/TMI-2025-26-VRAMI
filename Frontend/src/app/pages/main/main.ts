@@ -7,12 +7,13 @@ import { FormsModule } from '@angular/forms';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { MapService } from '@/services/map.service';
 import { Parada } from 'public/app/map/models/parada.model';
+import { AppTopbar } from '@/layout/components/app.topbar';
 import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-main',
     standalone: true,
-    imports: [MapComponent, CommonModule, FormsModule, DragDropModule],
+    imports: [MapComponent, CommonModule, FormsModule, DragDropModule, AppTopbar],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
     templateUrl: './main.html',
     styleUrl: './main.scss'

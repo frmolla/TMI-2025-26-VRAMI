@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, computed, signal } from '@angular/core';
+import { AppTopbar } from '@/layout/components/app.topbar';
 
 interface RouteLocation {
     name: string;
@@ -46,9 +47,10 @@ interface GlobePoint {
 @Component({
     selector: 'app-route-preview',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, AppTopbar],
     template: `
         <section class="route-preview-page">
+            <div app-topbar ></div>
             <div class="hero-card">
                 <div>
                     <p class="eyebrow">VRAMI · Preview</p>

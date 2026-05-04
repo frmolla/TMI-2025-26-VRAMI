@@ -1,6 +1,7 @@
 import { Component, ElementRef, inject, ViewChild } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { LayoutService } from '@/layout/service/layout.service';
+
 
 @Component({
     selector: '[app-topbar]',
@@ -22,7 +23,7 @@ import { LayoutService } from '@/layout/service/layout.service';
             </a>
         </nav>
 
-        <button type="button" class="topbar-icon-btn topbar-logout-btn" title="Cerrar sesión">
+        <button type="button" class="topbar-icon-btn topbar-logout-btn" title="Cerrar sesión" (click)="onLogout()">
             <i class="pi pi-sign-out"></i>
         </button>
     `,
@@ -30,12 +31,22 @@ import { LayoutService } from '@/layout/service/layout.service';
 })
 export class AppTopbar {
     @ViewChild('menubutton') menuButton!: ElementRef<HTMLElement>;
-
+    router = inject(Router);
     el = inject(ElementRef);
 
     constructor(public layoutService: LayoutService) {}
 
     onMenuButtonClick() {
         this.layoutService.onMenuToggle();
+    }
+    onLogout() {
+        // A. Borramos el token JWT (Asegúrate de que 'token' es el nombre que usaste al guardarlo)
+        localStorage.removeItem('token'); 
+        
+        // B. (Opcional) Si guardaste más cosas, como datos del usuario, bórralos también
+        // localStorage.removeItem('user'); 
+
+        // C. Redirigimos a la pantalla de login (cambia '/login' por la ruta real de tu login)
+        this.router.navigate(['/auth/login']); 
     }
 }

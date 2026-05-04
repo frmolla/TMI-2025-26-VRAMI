@@ -97,6 +97,9 @@ a {
         pointer-events: auto; // re-enable on actual topbar
     }
 }
+.app-topbar{
+    margin-top: 25px;
+}
 
 // Prevent double scrollbar at page level
 html, body {
