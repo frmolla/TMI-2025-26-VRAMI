@@ -21,4 +21,5 @@ export class AuthController {
   async loginAsGuest() {
     return this.authService.loginAsGuest();
   }
+  
 }

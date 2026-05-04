@@ -1,6 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, signal } from '@angular/core';
+import mapboxgl, { Map, Marker } from 'mapbox-gl';
+import * as turf from '@turf/turf';
+import { AppTopbar } from '@/layout/components/app.topbar';
 
 interface RouteLocation {
     name: string;
@@ -35,25 +38,18 @@ interface ProjectEntity {
     updatedAt: string;
 }
 
-interface GlobePoint {
-    x: number;
-    y: number;
-    visible: boolean;
-    location: RouteLocation;
-    index: number;
-}
-
 @Component({
     selector: 'app-route-preview',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, AppTopbar],
     template: `
         <section class="route-preview-page">
+            <div app-topbar ></div>
             <div class="hero-card">
                 <div>
                     <p class="eyebrow">VRAMI · Preview</p>
                     <h1>Previsualización de rutas</h1>
-                    <p class="hero-copy">Vista previa conectada al backend con estadísticas, segmentos y una visualización tipo globo 3D.</p>
+                    <p class="hero-copy">Globo 3D real con Mapbox · arrastra para rotar, rueda para hacer zoom.</p>
                 </div>
                 <button class="reload-btn" type="button" (click)="loadProjects()">Recargar</button>
             </div>
@@ -75,7 +71,7 @@ interface GlobePoint {
                         >
                             <div class="project-card-top">
                                 <strong>{{ project.name }}</strong>
-                                <span>#{{ project.id }}</span>
+                                <span>#{{ project.id.slice(0, 8) }}</span>
                             </div>
                             <p>{{ project.description || 'Sin descripción' }}</p>
                             <div class="project-tags">
@@ -120,65 +116,12 @@ interface GlobePoint {
                         <div class="panel-header with-copy">
                             <div>
                                 <h2>Visualización 3D de la ruta</h2>
-                                <p>Globo estilizado con proyección ortográfica y arcos de vuelo.</p>
+                                <p>Globo terráqueo real · arrastra · rueda para zoom · click derecho inclina.</p>
                             </div>
+                            <button class="reset-btn" type="button" (click)="resetGlobeView()">Reset</button>
                         </div>
 
-                        <div class="globe-stage">
-                            <div class="globe-back-glow"></div>
-                            <div class="globe-shell"></div>
-                            <svg class="globe-svg" viewBox="0 0 700 420" aria-label="3D route preview">
-                                <defs>
-                                    <radialGradient id="oceanGlow" cx="50%" cy="42%" r="65%">
-                                        <stop offset="0%" stop-color="#2563eb" stop-opacity="0.45"></stop>
-                                        <stop offset="55%" stop-color="#0f172a" stop-opacity="0.25"></stop>
-                                        <stop offset="100%" stop-color="#020617" stop-opacity="0"></stop>
-                                    </radialGradient>
-                                    <linearGradient id="routeGlow" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" stop-color="#22d3ee"></stop>
-                                        <stop offset="100%" stop-color="#38bdf8"></stop>
-                                    </linearGradient>
-                                    <filter id="softGlow">
-                                        <feGaussianBlur stdDeviation="3.5" result="blur"></feGaussianBlur>
-                                        <feMerge>
-                                            <feMergeNode in="blur"></feMergeNode>
-                                            <feMergeNode in="SourceGraphic"></feMergeNode>
-                                        </feMerge>
-                                    </filter>
-                                </defs>
-
-                                <ellipse cx="350" cy="210" rx="146" ry="146" class="sphere-shadow"></ellipse>
-                                <circle cx="350" cy="210" r="146" class="sphere-outline"></circle>
-                                <circle cx="350" cy="210" r="146" fill="url(#oceanGlow)"></circle>
-
-                                <g class="globe-graticule">
-                                    <ellipse cx="350" cy="210" rx="146" ry="146"></ellipse>
-                                    <ellipse cx="350" cy="210" rx="110" ry="146"></ellipse>
-                                    <ellipse cx="350" cy="210" rx="70" ry="146"></ellipse>
-                                    <ellipse cx="350" cy="210" rx="35" ry="146"></ellipse>
-                                    <path d="M204 210 H496"></path>
-                                    <path d="M224 155 C280 145, 420 145, 476 155"></path>
-                                    <path d="M224 265 C280 275, 420 275, 476 265"></path>
-                                    <path d="M250 120 C300 105, 400 105, 450 120"></path>
-                                    <path d="M250 300 C300 315, 400 315, 450 300"></path>
-                                </g>
-
-                                <g class="route-group" filter="url(#softGlow)">
-                                    <path *ngFor="let path of globePaths()" [attr.d]="path" class="route-path route-path-glow"></path>
-                                    <path *ngFor="let path of globePaths()" [attr.d]="path" class="route-path route-path-main"></path>
-                                </g>
-
-                                <g class="point-group">
-                                    <g *ngFor="let point of globePoints()">
-                                        <circle *ngIf="point.visible" [attr.cx]="point.x" [attr.cy]="point.y" r="6" class="route-point-core"></circle>
-                                        <circle *ngIf="point.visible" [attr.cx]="point.x" [attr.cy]="point.y" r="12" class="route-point-ring"></circle>
-                                        <text *ngIf="point.visible" [attr.x]="point.x + 14" [attr.y]="point.y - 10" class="route-label">
-                                            {{ point.location.name }}
-                                        </text>
-                                    </g>
-                                </g>
-                            </svg>
-                        </div>
+                        <div #globeContainer class="globe-canvas"></div>
                     </div>
 
                     <div class="bottom-grid">
@@ -310,6 +253,22 @@ interface GlobePoint {
 
             .reload-btn:hover {
                 transform: translateY(-1px);
+            }
+
+            .reset-btn {
+                border: 1px solid rgba(148, 163, 184, 0.3);
+                background: rgba(15, 23, 42, 0.72);
+                color: #e5eefc;
+                padding: 0.5rem 0.9rem;
+                border-radius: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                font-size: 0.85rem;
+            }
+
+            .reset-btn:hover {
+                background: rgba(30, 41, 59, 0.92);
+                border-color: rgba(56, 189, 248, 0.4);
             }
 
             .layout-grid {
@@ -463,100 +422,28 @@ interface GlobePoint {
                 text-shadow: 0 2px 12px rgba(56, 189, 248, 0.15);
             }
 
-            .globe-stage {
-                position: relative;
-                min-height: 420px;
-                border-radius: 26px;
-                overflow: hidden;
-                background:
-                    radial-gradient(circle at 30% 28%, rgba(59, 130, 246, 0.18), transparent 22%),
-                    radial-gradient(circle at 70% 18%, rgba(34, 211, 238, 0.12), transparent 18%),
-                    linear-gradient(180deg, rgba(4, 8, 20, 0.98), rgba(2, 6, 23, 1));
-                border: 1px solid rgba(148, 163, 184, 0.16);
-            }
-
-            .globe-back-glow {
-                position: absolute;
-                inset: 10% 18%;
-                background: radial-gradient(circle, rgba(59, 130, 246, 0.2), transparent 62%);
-                filter: blur(30px);
-            }
-
-            .globe-shell {
-                position: absolute;
-                left: 50%;
-                top: 50%;
-                width: 292px;
-                height: 292px;
-                transform: translate(-50%, -50%);
-                border-radius: 50%;
-                background:
-                    radial-gradient(circle at 32% 30%, rgba(255, 255, 255, 0.3), transparent 18%),
-                    radial-gradient(circle at 42% 38%, rgba(125, 211, 252, 0.18), transparent 26%),
-                    linear-gradient(180deg, rgba(30, 64, 175, 0.14), rgba(2, 6, 23, 0));
-                box-shadow:
-                    inset -28px -30px 60px rgba(2, 6, 23, 0.76),
-                    inset 16px 16px 42px rgba(96, 165, 250, 0.12);
-            }
-
-            .globe-svg {
-                position: relative;
+            .globe-canvas {
                 width: 100%;
-                height: 420px;
-                z-index: 2;
+                height: 480px;
+                border-radius: 22px;
+                overflow: hidden;
+                background: #02060f;
+                border: 1px solid rgba(148, 163, 184, 0.18);
             }
 
-            .sphere-shadow {
-                fill: rgba(8, 15, 34, 0.25);
+            .globe-canvas :global(.mapboxgl-ctrl-bottom-right),
+            .globe-canvas :global(.mapboxgl-ctrl-bottom-left) {
+                opacity: 0.5;
             }
 
-            .sphere-outline {
-                fill: none;
-                stroke: rgba(148, 163, 184, 0.18);
-                stroke-width: 1.2;
-            }
-
-            .globe-graticule ellipse,
-            .globe-graticule path {
-                fill: none;
-                stroke: rgba(148, 163, 184, 0.14);
-                stroke-width: 1;
-            }
-
-            .route-path {
-                fill: none;
-                stroke-linecap: round;
-                stroke-linejoin: round;
-            }
-
-            .route-path-glow {
-                stroke: rgba(34, 211, 238, 0.25);
-                stroke-width: 8;
-            }
-
-            .route-path-main {
-                stroke: url(#routeGlow);
-                stroke-width: 3.2;
-                stroke-dasharray: 10 8;
-                animation: dashMove 18s linear infinite;
-            }
-
-            .route-point-core {
-                fill: #f8fafc;
-                stroke: #38bdf8;
-                stroke-width: 2.5;
-            }
-
-            .route-point-ring {
-                fill: rgba(56, 189, 248, 0.08);
-                stroke: rgba(56, 189, 248, 0.34);
-                stroke-width: 1.2;
-            }
-
-            .route-label {
-                fill: #e2e8f0;
-                font-size: 12px;
-                font-weight: 600;
+            .globe-marker {
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background: radial-gradient(circle at 35% 30%, #f8fafc, #38bdf8 60%, #0c4a6e);
+                border: 2px solid rgba(255, 255, 255, 0.9);
+                box-shadow: 0 0 12px rgba(56, 189, 248, 0.8), 0 0 24px rgba(56, 189, 248, 0.4);
+                cursor: pointer;
             }
 
             .timeline {
@@ -631,15 +518,6 @@ interface GlobePoint {
                 color: #94a3b8;
             }
 
-            @keyframes dashMove {
-                from {
-                    stroke-dashoffset: 0;
-                }
-                to {
-                    stroke-dashoffset: -360;
-                }
-            }
-
             @media (max-width: 1200px) {
                 .layout-grid,
                 .bottom-grid {
@@ -656,6 +534,10 @@ interface GlobePoint {
                     flex-direction: column;
                     align-items: flex-start;
                 }
+
+                .globe-canvas {
+                    height: 380px;
+                }
             }
 
             @media (max-width: 560px) {
@@ -667,47 +549,43 @@ interface GlobePoint {
                     grid-template-columns: 1fr;
                 }
 
-                .globe-stage,
-                .globe-svg {
-                    min-height: 320px;
+                .globe-canvas {
                     height: 320px;
                 }
             }
         `
     ]
 })
-export class RoutePreviewComponent implements OnInit {
+export class RoutePreviewComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly apiUrl = 'http://localhost:3000/projects';
+    private readonly mapboxToken = 'pk.eyJ1IjoiZnJtb2xsYSIsImEiOiJjbThwZjZzNDMwOXNiMmtzY213c3JwZG5zIn0.yQ_fgbNya6IUaV-s4R9iSw';
+
+    @ViewChild('globeContainer') globeContainer!: ElementRef<HTMLDivElement>;
 
     readonly projects = signal<ProjectEntity[]>([]);
     readonly selectedProject = signal<ProjectEntity | null>(null);
 
-    readonly globePoints = computed(() => {
-        const project = this.selectedProject();
-        if (!project) {
-            return [] as GlobePoint[];
-        }
-
-        const centerLng = project.preview?.center?.lng ?? 0;
-
-        return project.locations.map((location, index) => this.projectLocationToGlobe(location, index, centerLng));
-    });
-
-    readonly globePaths = computed(() => {
-        const points = this.globePoints().filter((point) => point.visible);
-        const paths: string[] = [];
-
-        for (let i = 0; i < points.length - 1; i++) {
-            paths.push(this.buildArcPath(points[i], points[i + 1]));
-        }
-
-        return paths;
-    });
+    private map: Map | null = null;
+    private markers: Marker[] = [];
+    private viewReady = false;
 
     constructor(private readonly http: HttpClient) {}
 
     ngOnInit(): void {
         this.loadProjects();
+    }
+
+    ngAfterViewInit(): void {
+        this.viewReady = true;
+        this.initGlobeIfNeeded();
+    }
+
+    ngOnDestroy(): void {
+        this.clearMarkers();
+        if (this.map) {
+            this.map.remove();
+            this.map = null;
+        }
     }
 
     loadProjects(): void {
@@ -722,6 +600,7 @@ export class RoutePreviewComponent implements OnInit {
                 const currentId = this.selectedProject()?.id;
                 const currentProject = projects.find((project) => project.id === currentId) ?? projects[0];
                 this.selectedProject.set(currentProject);
+                this.renderProjectOnGlobe(currentProject);
             },
             error: (error) => {
                 console.error('Error loading projects', error);
@@ -733,6 +612,20 @@ export class RoutePreviewComponent implements OnInit {
 
     selectProject(project: ProjectEntity): void {
         this.selectedProject.set(project);
+        this.renderProjectOnGlobe(project);
+    }
+
+    resetGlobeView(): void {
+        const project = this.selectedProject();
+        if (!this.map || !project) return;
+        const center = project.preview?.center;
+        this.map.flyTo({
+            center: center ? [center.lng, center.lat] : [0, 20],
+            zoom: 1.5,
+            pitch: 0,
+            bearing: 0,
+            duration: 1200
+        });
     }
 
     formatDistance(distanceKm: number): string {
@@ -742,36 +635,126 @@ export class RoutePreviewComponent implements OnInit {
         })} km`;
     }
 
-    private projectLocationToGlobe(location: RouteLocation, index: number, centerLng: number): GlobePoint {
-        const radius = 146;
-        const cx = 350;
-        const cy = 210;
-        const degToRad = Math.PI / 180;
+    private initGlobeIfNeeded(): void {
+        if (this.map || !this.viewReady || !this.globeContainer) return;
 
-        const lambda = (location.lng - centerLng) * degToRad;
-        const phi = location.lat * degToRad;
+        mapboxgl.accessToken = this.mapboxToken;
 
-        const x = radius * Math.cos(phi) * Math.sin(lambda);
-        const y = -radius * Math.sin(phi);
-        const z = radius * Math.cos(phi) * Math.cos(lambda);
+        this.map = new mapboxgl.Map({
+            container: this.globeContainer.nativeElement,
+            style: 'mapbox://styles/mapbox/satellite-streets-v12',
+            projection: { name: 'globe' } as any,
+            center: [0, 20],
+            zoom: 1.4,
+            pitch: 0,
+            bearing: 0,
+            attributionControl: false
+        });
 
-        return {
-            x: cx + x,
-            y: cy + y,
-            visible: z >= 0,
-            location,
-            index
-        };
+        this.map.on('style.load', () => {
+            if (!this.map) return;
+            this.map.setFog({
+                color: 'rgb(186, 210, 235)',
+                'high-color': 'rgb(36, 92, 223)',
+                'horizon-blend': 0.02,
+                'space-color': 'rgb(11, 11, 25)',
+                'star-intensity': 0.6
+            } as any);
+
+            const project = this.selectedProject();
+            if (project) {
+                this.renderProjectOnGlobe(project);
+            }
+        });
     }
 
-    private buildArcPath(from: GlobePoint, to: GlobePoint): string {
-        const mx = (from.x + to.x) / 2;
-        const my = (from.y + to.y) / 2;
-        const dx = to.x - from.x;
-        const dy = to.y - from.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const lift = Math.max(26, distance * 0.22);
+    private renderProjectOnGlobe(project: ProjectEntity): void {
+        if (!this.viewReady) return;
+        this.initGlobeIfNeeded();
+        if (!this.map) return;
+        if (!this.map.isStyleLoaded()) {
+            this.map.once('style.load', () => this.renderProjectOnGlobe(project));
+            return;
+        }
 
-        return `M ${from.x} ${from.y} Q ${mx} ${my - lift} ${to.x} ${to.y}`;
+        this.clearMarkers();
+        this.clearRouteLayer();
+
+        const locations = project.locations ?? [];
+        if (!locations.length) return;
+
+        locations.forEach((location, idx) => {
+            const el = document.createElement('div');
+            el.className = 'globe-marker';
+            el.title = `${idx + 1}. ${location.name}`;
+            const marker = new mapboxgl.Marker({ element: el })
+                .setLngLat([location.lng, location.lat])
+                .addTo(this.map!);
+            this.markers.push(marker);
+        });
+
+        if (locations.length >= 2) {
+            const arcCoords: [number, number][] = [];
+            for (let i = 0; i < locations.length - 1; i++) {
+                const from = turf.point([locations[i].lng, locations[i].lat]);
+                const to = turf.point([locations[i + 1].lng, locations[i + 1].lat]);
+                const arc = turf.greatCircle(from, to, { npoints: 100 });
+                arcCoords.push(...(arc.geometry.coordinates as [number, number][]));
+            }
+
+            const geojson: GeoJSON.Feature<GeoJSON.LineString> = {
+                type: 'Feature',
+                properties: {},
+                geometry: { type: 'LineString', coordinates: arcCoords }
+            };
+
+            this.map.addSource('route-preview-line', { type: 'geojson', data: geojson });
+            this.map.addLayer({
+                id: 'route-preview-line-glow',
+                type: 'line',
+                source: 'route-preview-line',
+                layout: { 'line-cap': 'round', 'line-join': 'round' },
+                paint: {
+                    'line-color': '#22d3ee',
+                    'line-width': 8,
+                    'line-opacity': 0.25,
+                    'line-blur': 4
+                }
+            });
+            this.map.addLayer({
+                id: 'route-preview-line-main',
+                type: 'line',
+                source: 'route-preview-line',
+                layout: { 'line-cap': 'round', 'line-join': 'round' },
+                paint: {
+                    'line-color': '#38bdf8',
+                    'line-width': 2.5
+                }
+            });
+        }
+
+        const center = project.preview?.center;
+        this.map.flyTo({
+            center: center ? [center.lng, center.lat] : [locations[0].lng, locations[0].lat],
+            zoom: 1.5,
+            pitch: 0,
+            bearing: 0,
+            duration: 1500
+        });
+    }
+
+    private clearMarkers(): void {
+        this.markers.forEach((m) => m.remove());
+        this.markers = [];
+    }
+
+    private clearRouteLayer(): void {
+        if (!this.map) return;
+        ['route-preview-line-main', 'route-preview-line-glow'].forEach((id) => {
+            if (this.map!.getLayer(id)) this.map!.removeLayer(id);
+        });
+        if (this.map.getSource('route-preview-line')) {
+            this.map.removeSource('route-preview-line');
+        }
     }
 }

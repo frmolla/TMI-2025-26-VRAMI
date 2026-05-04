@@ -18,7 +18,7 @@ import { AppProfileMenu } from '@/layout/components/app.profilemenu';
     template: `
         <div class="layout-container" [ngClass]="containerClass">
             <div class="layout-content-wrapper" style="padding: 0 !important">
-                <div class="layout-content">
+                <div class="layout-content" style="padding: 0 !important">
                     <router-outlet></router-outlet>
                 </div>
 

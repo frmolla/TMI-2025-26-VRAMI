@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { AppLayout } from '@/layout/components/app.layout';
 import { AppSimpleLayout } from '@/layout/components/app.simple-layout';
+import { authGuard } from '@/guards/auth.guard';
 
 export const appRoutes: Routes = [
     {
@@ -35,6 +36,7 @@ export const appRoutes: Routes = [
             },
             {
                 path: 'route-preview',
+                canActivate: [authGuard],
                 data: { breadcrumb: 'Route Preview' },
                 loadComponent: () => import('@/pages/route-preview/route-preview').then((c) => c.RoutePreviewComponent)
             }

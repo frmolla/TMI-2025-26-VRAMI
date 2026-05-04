@@ -1,6 +1,15 @@
 # TMI-2025-26-VRAMI
 
-Proyecto universitario compuesto por un **frontend en Angular 20** y un **backend en NestJS 11**. A continuación se describe cómo instalar y ejecutar ambas partes.
+Proyecto universitario para la asignatura Tecnologías multimedia e interacción.
+
+Miembros del grupo que han desarrollado el proyecto: 
+- Francisco Mollá
+- Roberto Narváez
+- Francys Paucarima
+- Cristhian Cola
+- Zhaoyang Qi
+
+El proyecto es compuesto por un **frontend en Angular 20** y un **backend en NestJS 11**. A continuación se describe cómo instalar y ejecutar ambas partes.
 
 ---
 

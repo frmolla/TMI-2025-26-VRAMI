@@ -50,7 +50,7 @@ ngOnInit(): void {
       this.markerReorder();
     });
 
-      this.mapService.replayAnimation$.subscribe(async () => {
+  this.mapService.replayAnimation$.subscribe(async () => {
     if (this.points.length < 2) return;
 
     if (this.animationFrameId) {
