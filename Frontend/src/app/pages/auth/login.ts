@@ -43,7 +43,7 @@ import { AuthService } from '@/services/auth.service';
                         <button pButton pRipple severity="secondary" label="Entrar como invitado" class="btn-guest w-full" (click)="loginGuest()"></button>
                     </div>
 
-                    <span class="signup-text"> Don’t have an account? <a routerLink="/auth/register">Sign-up here</a> </span>
+                    <span class="signup-text"> ¿Aún no tienes una cuenta? <a routerLink="/auth/register">Registrate aquí</a> </span>
                 </div>
 
                 <div class="login-footer">
