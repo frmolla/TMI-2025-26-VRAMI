@@ -1,29 +1,23 @@
-import {Component, OnDestroy, Renderer2, ViewChild} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {NavigationEnd, Router, RouterModule} from '@angular/router';
-import {filter, Subscription} from 'rxjs';
-import {AppTopbar} from './app.topbar';
-import {LayoutService} from '@/layout/service/layout.service';
-import {AppConfigurator} from './app.configurator';
-import {AppBreadcrumb} from './app.breadcrumb';
-import {AppSidebar} from './app.sidebar';
-import {ToastModule} from 'primeng/toast';
-import {MessageService} from 'primeng/api';
-import {AppProfileMenu} from "@/layout/components/app.profilemenu";
+import { Component, OnDestroy, Renderer2, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { filter, Subscription } from 'rxjs';
+import { AppTopbar } from './app.topbar';
+import { LayoutService } from '@/layout/service/layout.service';
+import { AppConfigurator } from './app.configurator';
+import { AppBreadcrumb } from './app.breadcrumb';
+import { AppSidebar } from './app.sidebar';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { AppProfileMenu } from '@/layout/components/app.profilemenu';
 
 @Component({
     selector: 'app-layout',
     standalone: true,
-    imports: [CommonModule, AppTopbar, RouterModule, AppConfigurator, AppBreadcrumb, ToastModule, AppProfileMenu],
+    imports: [CommonModule, RouterModule, AppConfigurator, ToastModule, AppProfileMenu],
     template: `
         <div class="layout-container" [ngClass]="containerClass">
-            <div class="layout-content-wrapper">
-                <div app-topbar></div>
-
-                <div class="content-breadcrumb">
-                    <div app-breadcrumb></div>
-                </div>
-
+            <div class="layout-content-wrapper" style="padding: 0 !important">
                 <div class="layout-content">
                     <router-outlet></router-outlet>
                 </div>
@@ -62,11 +56,14 @@ export class AppLayout implements OnDestroy {
                 });
             }
             if ((this.layoutService.isHorizontal() || this.layoutService.isSlim() || this.layoutService.isSlimPlus()) && !this.menuScrollListener) {
-                this.menuScrollListener = this.renderer.listen(this.appTopbar.appSidebar.appMenu.menuContainer.nativeElement, 'scroll', (event) => {
-                    if (this.layoutService.isDesktop()) {
-                        this.hideMenu();
-                    }
-                });
+                const menuContainer = document.querySelector('.layout-sidebar .layout-menu-container') as HTMLElement;
+                if (menuContainer) {
+                    this.menuScrollListener = this.renderer.listen(menuContainer, 'scroll', (event) => {
+                        if (this.layoutService.isDesktop()) {
+                            this.hideMenu();
+                        }
+                    });
+                }
             }
             if (this.layoutService.layoutState().staticMenuMobileActive) {
                 this.blockBodyScroll();

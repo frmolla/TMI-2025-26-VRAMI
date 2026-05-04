@@ -10,6 +10,14 @@
     flex-direction: column;
     border-radius: 0px 40px 40px 0px;
 
+    // ── Glass sidebar ───────────────────────────────────────
+    background: var(--glass-sidebar-bg) !important;
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-right: 1px solid var(--glass-border);
+    box-shadow: var(--sidebar-shadow);
+    border: var(--sidebar-border);
+
     .sidebar-header {
         padding: 1.7rem 1.57rem 0.5rem 2.42rem;
         display: flex;

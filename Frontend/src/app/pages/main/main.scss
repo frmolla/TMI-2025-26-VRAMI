@@ -29,7 +29,7 @@
     backdrop-filter: blur(10px);
     border-radius: 12px;
     padding: 20px;
-    margin-right: 80px;
+    margin-right: 20px;
     z-index: 10;
     color: white;
     display: flex;
@@ -217,15 +217,20 @@ ul.cdk-drop-list-dragging .parada-item:not(.cdk-drag-placeholder) {
         }
     }
 }
+.layout-content-wrapper {
+    padding: 0px !important;
+}
 
 // --- PANTALLA DE GRABACIÓN ---
 .recording-overlay {
-    position: fixed; // Para que ocupe toda la pantalla del navegador
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 9999; // Para que quede por encima de los menús y el mapa
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important; // Anclado a la derecha
+    bottom: 0 !important; // Anclado abajo
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 999999 !important; // Para que quede por encima de los menús y el mapa
 
     // Aquí está la magia: un fondo oscuro semitransparente con desenfoque
     background-color: rgba(15, 23, 42, 0.4);

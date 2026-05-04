@@ -1,5 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateProjectDto, RouteLocationDto } from './dto/create-project.dto';
+import { Project } from './entities/project.entity';
 import * as fs from 'fs';
 import * as path from 'path';
 import { exec } from 'child_process';
@@ -21,68 +24,60 @@ export interface PreviewData {
   segments: RouteSegment[];
 }
 
-export interface ProjectEntity {
-  id: string;
-  name: string;
-  description?: string;
-  animationType: 'sequential' | 'loop';
-  speed: number;
-  locations: RouteLocationDto[];
-  preview: PreviewData;
-  createdAt: string;
-  updatedAt: string;
-}
-
 @Injectable()
 export class ProjectsService {
-  private projects: ProjectEntity[] = [];
-  private nextId = 1;
+  constructor(@InjectRepository(Project) private projectsRepo: Repository<Project>) {}
 
-  findAll(): ProjectEntity[] {
-    return this.projects;
+  async findAll(): Promise<Project[]> {
+    return this.projectsRepo.find({ relations: ['user'] });
   }
 
-  findOne(id: string): ProjectEntity {
-    const project = this.projects.find((item) => item.id === id);
+  async findByUserId(userId: string): Promise<Project[]> {
+    return this.projectsRepo.find({
+      where: { user_id: userId },
+      relations: ['user'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async findOne(id: string): Promise<Project> {
+    const project = await this.projectsRepo.findOne({
+      where: { id },
+      relations: ['user'],
+    });
     if (!project) {
       throw new NotFoundException(`Project with id ${id} not found`);
     }
     return project;
   }
 
-  create(dto: CreateProjectDto): ProjectEntity {
+  async create(dto: CreateProjectDto, userId: string): Promise<Project> {
     const normalizedLocations = this.normalizeLocations(dto.locations ?? []);
-    const now = new Date().toISOString();
 
-    const project: ProjectEntity = {
-      id: String(this.nextId++),
+    if (normalizedLocations.length === 0) {
+      throw new BadRequestException('At least one valid location is required');
+    }
+
+    const project = this.projectsRepo.create({
       name: dto.name,
-      description: dto.description ?? '',
+      description: dto.description,
       animationType: dto.animationType ?? 'sequential',
       speed: dto.speed ?? 1,
       locations: normalizedLocations,
       preview: this.buildPreview(normalizedLocations),
-      createdAt: now,
-      updatedAt: now,
-    };
+      user_id: userId,
+    });
 
-    this.projects.push(project);
-    return project;
+    return this.projectsRepo.save(project);
   }
 
-  remove(id: string): { message: string } {
-    const index = this.projects.findIndex((item) => item.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Project with id ${id} not found`);
-    }
-
-    this.projects.splice(index, 1);
+  async remove(id: string): Promise<{ message: string }> {
+    const project = await this.findOne(id);
+    await this.projectsRepo.remove(project);
     return { message: `Project ${id} deleted successfully` };
   }
 
-  private normalizeLocations(
-    locations: RouteLocationDto[],
-  ): RouteLocationDto[] {
+  private normalizeLocations(locations: RouteLocationDto[]): RouteLocationDto[] {
     return locations
       .filter((location) => this.isValidLocation(location))
       .map((location) => ({
@@ -95,8 +90,7 @@ export class ProjectsService {
 
   private isValidLocation(location: RouteLocationDto | undefined): boolean {
     if (!location) return false;
-    const hasName =
-      typeof location.name === 'string' && location.name.trim().length > 0;
+    const hasName = typeof location.name === 'string' && location.name.trim().length > 0;
     const hasLat = Number.isFinite(Number(location.lat));
     const hasLng = Number.isFinite(Number(location.lng));
     return hasName && hasLat && hasLng;
@@ -184,13 +178,12 @@ export class ProjectsService {
 
     try {
       console.log('Convirtiendo a MP4 con FFmpeg...');
-      // Comando para que cualquier dispositivo pueda leer el MP4
       await execAsync(
         `ffmpeg -i "${inputPath}" -c:v libx264 -preset slow -crf 18 -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -pix_fmt yuv420p -y "${outputPath}"`,
       );
 
       console.log('✅ ¡Vídeo MP4 generado exitosamente en:', outputPath);
-      fs.unlinkSync(inputPath); // Borra el archivo .webm temporal
+      fs.unlinkSync(inputPath);
 
       return outputPath;
     } catch (error) {

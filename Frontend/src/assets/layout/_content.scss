@@ -1,3 +1,22 @@
 .layout-content-wrapper {
-    padding: 2rem;
+    padding: 0 !important;
+}
+
+// Content area inside the wrapper gets breathing room
+.layout-content {
+    padding: 1.5rem 2rem 2rem;
+    min-height: 100%;
+
+    @media (max-width: 768px) {
+        padding: 1rem;
+    }
+}
+
+// Use .layout-content-fullbleed on pages that manage their own padding/background
+.layout-content-fullbleed > .layout-content {
+    padding: 0 !important;
+}
+
+.app-layout-content-wrapper {
+    padding: 1.5rem 2rem 2rem;
 }

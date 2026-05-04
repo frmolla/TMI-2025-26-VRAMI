@@ -1,0 +1,327 @@
+<p-toast position="top-right" />
+
+<div class="user-profile-wrapper">
+  <!-- Animated background blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- Page header -->
+  <header class="page-header">
+    <div>
+      <h1 class="gradient-title">Configuración de cuenta</h1>
+      <p class="page-subtitle">Gestiona tu identidad y personaliza tu experiencia</p>
+    </div>
+    @if (isDirty()) {
+      <div class="unsaved-pill">
+        <i class="pi pi-circle-fill"></i>
+        Cambios sin guardar
+      </div>
+    }
+  </header>
+
+  <!-- Two-column layout -->
+  <div class="profile-grid">
+
+    <!-- ── LEFT: Identity sidebar ── -->
+    <aside class="glass-card identity-card">
+
+      <!-- Avatar zone -->
+      <div class="avatar-zone">
+        <div class="avatar-ring" (click)="triggerAvatarInput()" title="Haz clic para cambiar la foto">
+          <img
+            [src]="avatarPreview() || currentUser.photoURL"
+            [alt]="currentUser.displayName"
+            class="avatar-img"
+            (error)="onAvatarError($event)" />
+          <div class="avatar-hover-overlay">
+            <i class="pi pi-camera"></i>
+            <span>Cambiar foto</span>
+          </div>
+        </div>
+        <input type="file" id="avatarInput" accept="image/*" class="hidden" (change)="onAvatarChange($event)" />
+
+        <h2 class="display-name">{{ currentUser.displayName }}</h2>
+        <p class="username-handle">&#64;{{ currentUser.username }}</p>
+
+        <div class="badges-row">
+          <p-tag [value]="currentUser.role.toUpperCase()" [severity]="roleSeverity" />
+          <p-tag [value]="currentUser.usage.tier.toUpperCase()" [severity]="tierSeverity" [icon]="tierIcon" />
+        </div>
+      </div>
+
+      <div class="card-divider"></div>
+
+      <!-- Meta info -->
+      <div class="meta-list">
+        <div class="meta-row">
+          <span class="meta-icon pi pi-calendar"></span>
+          <div>
+            <span class="meta-label">Miembro desde</span>
+            <span class="meta-value">{{ formatDate(currentUser.createdAt) }}</span>
+          </div>
+        </div>
+        @if (currentUser.lastLogin) {
+          <div class="meta-row">
+            <span class="meta-icon pi pi-clock"></span>
+            <div>
+              <span class="meta-label">Último acceso</span>
+              <span class="meta-value">{{ formatDate(currentUser.lastLogin) }}</span>
+            </div>
+          </div>
+        }
+        <div class="meta-row">
+          <span class="meta-icon pi pi-envelope"></span>
+          <div>
+            <span class="meta-label">Correo electrónico</span>
+            <span class="meta-value email-truncate">{{ currentUser.email }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-divider"></div>
+
+      <!-- Quick stats -->
+      <div class="stats-row">
+        <div class="stat-bubble">
+          <span class="stat-num">{{ currentUser.usage.animationsCreated }}</span>
+          <span class="stat-lbl">Clips</span>
+        </div>
+        <div class="stat-separator"></div>
+        <div class="stat-bubble">
+          <span class="stat-num">{{ getDaysSinceJoin() }}</span>
+          <span class="stat-lbl">Días</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── RIGHT: Tabbed forms card ── -->
+    <div class="glass-card form-card">
+      <p-tabs value="0">
+        <p-tablist>
+          <p-tab value="0"><i class="pi pi-user mr-2"></i>Perfil</p-tab>
+          <p-tab value="1"><i class="pi pi-cog mr-2"></i>Configuración</p-tab>
+          <p-tab value="2"><i class="pi pi-chart-bar mr-2"></i>Uso</p-tab>
+        </p-tablist>
+
+        <p-tabpanels>
+
+          <!-- ── Tab 0: Profile ── -->
+          <p-tabpanel value="0">
+            <form [formGroup]="profileForm" class="tab-form">
+
+              <div class="field-grid">
+                <div class="field-col">
+                  <label class="field-label">Nombre visible</label>
+                  <input
+                    pInputText
+                    formControlName="displayName"
+                    placeholder="Tu nombre completo"
+                    class="glass-input w-full" />
+                  @if (profileForm.get('displayName')?.invalid && profileForm.get('displayName')?.touched) {
+                    <small class="field-error">El nombre visible es obligatorio (mín. 2 caracteres)</small>
+                  }
+                </div>
+
+                <div class="field-col">
+                  <label class="field-label">Nombre de usuario</label>
+                  <div class="input-prefix-wrap">
+                    <span class="input-prefix">&#64;</span>
+                    <input
+                      pInputText
+                      formControlName="username"
+                      placeholder="tu_usuario"
+                      class="glass-input prefixed w-full" />
+                  </div>
+                  @if (profileForm.get('username')?.invalid && profileForm.get('username')?.touched) {
+                    <small class="field-error">Solo letras minúsculas, números y guiones bajos</small>
+                  }
+                </div>
+              </div>
+
+              <div class="field-col">
+                <label class="field-label">Dirección de correo</label>
+                <div class="input-prefix-wrap">
+                  <span class="input-prefix pi pi-envelope"></span>
+                  <input
+                    pInputText
+                    type="email"
+                    formControlName="email"
+                    placeholder="tu@correo.com"
+                    class="glass-input prefixed w-full" />
+                </div>
+                @if (profileForm.get('email')?.invalid && profileForm.get('email')?.touched) {
+                    <small class="field-error">Introduce una dirección de correo válida</small>
+                }
+              </div>
+
+              <div class="field-col">
+                <label class="field-label">Rol</label>
+                <p-select
+                  formControlName="role"
+                  [options]="roleOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="glass-select"
+                  [style]="{'width':'100%'}"
+                  placeholder="Seleccionar rol" />
+              </div>
+
+              <div class="field-col">
+                <label class="field-label">
+                  <i class="pi pi-lock mr-1" style="opacity:.5"></i>ID de usuario
+                </label>
+                <input pInputText [value]="currentUser.id" readonly class="glass-input w-full readonly-input" />
+                <small class="field-hint">Este identificador no se puede cambiar</small>
+              </div>
+            </form>
+          </p-tabpanel>
+
+          <!-- ── Tab 1: Settings ── -->
+          <p-tabpanel value="1">
+            <form [formGroup]="settingsForm" class="tab-form">
+
+              <div class="field-grid">
+                <div class="field-col">
+                  <label class="field-label">Tema de interfaz</label>
+                  <p-select
+                    formControlName="theme"
+                    [options]="themeOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    styleClass="glass-select"
+                    [style]="{'width':'100%'}"
+                    placeholder="Seleccionar tema" />
+                </div>
+
+                <div class="field-col">
+                  <label class="field-label">Idioma</label>
+                  <p-select
+                    formControlName="language"
+                    [options]="languageOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    styleClass="glass-select"
+                    [style]="{'width':'100%'}"
+                    placeholder="Seleccionar idioma" />
+                </div>
+              </div>
+
+              <div class="field-col">
+                <label class="field-label">Formato de exportación predeterminado</label>
+                <div class="format-chips">
+                  @for (fmt of exportFormatOptions; track fmt.value) {
+                    <div
+                      class="format-chip"
+                      [class.active]="settingsForm.get('defaultExportFormat')?.value === fmt.value"
+                      (click)="settingsForm.get('defaultExportFormat')?.setValue(fmt.value)">
+                      <i [class]="fmt.icon + ' mr-2'"></i>
+                      <span>{{ fmt.label }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <div class="toggle-field">
+                <div class="toggle-row">
+                  <div>
+                    <p class="toggle-title">Notificaciones push</p>
+                    <p class="toggle-desc">Recibe alertas sobre exportaciones y actualizaciones de proyectos</p>
+                  </div>
+                  <p-toggleswitch formControlName="notificationsEnabled" />
+                </div>
+              </div>
+
+              <!-- Dynamic theme preview hint -->
+              @switch (settingsForm.get('theme')?.value) {
+                @case ('light') {
+                  <div class="theme-hint light-hint">
+                    <i class="pi pi-sun"></i>
+                    <span>Modo claro — limpio y brillante para trabajar de día</span>
+                  </div>
+                }
+                @case ('dark') {
+                  <div class="theme-hint dark-hint">
+                    <i class="pi pi-moon"></i>
+                    <span>Modo oscuro — suave para la vista, ideal para sesiones nocturnas</span>
+                  </div>
+                }
+                @default {
+                  <div class="theme-hint system-hint">
+                    <i class="pi pi-desktop"></i>
+                    <span>Modo sistema — se adapta automáticamente a la preferencia de tu SO</span>
+                  </div>
+                }
+              }
+            </form>
+          </p-tabpanel>
+
+          <!-- ── Tab 2: Usage ── -->
+          <p-tabpanel value="2">
+            <div class="usage-tab">
+
+              <!-- Plan highlight card -->
+              <div class="plan-highlight">
+                <div class="plan-top-row">
+                  <div>
+                    <h3 class="plan-name">{{ currentUser.usage.tier | titlecase }} Plan</h3>
+                    <p class="plan-desc">{{ getPlanDescription() }}</p>
+                  </div>
+                  <p-tag
+                    [value]="currentUser.usage.tier.toUpperCase()"
+                    [severity]="tierSeverity"
+                    [icon]="tierIcon" />
+                </div>
+                @if (currentUser.usage.tier !== 'enterprise') {
+                  <p-button
+                    label="Mejorar plan"
+                    icon="pi pi-arrow-circle-up"
+                    severity="info"
+                    size="small"
+                    styleClass="mt-3" />
+                }
+              </div>
+
+              <div class="activity-grid">
+                <div class="activity-card">
+                  <i class="pi pi-video activity-icon"></i>
+                  <span class="activity-num">{{ currentUser.usage.animationsCreated }}</span>
+                  <span class="activity-lbl">Animaciones creadas</span>
+                </div>
+                <div class="activity-card">
+                  <i class="pi pi-calendar activity-icon"></i>
+                  <span class="activity-num">{{ getDaysSinceJoin() }}</span>
+                  <span class="activity-lbl">Días como miembro</span>
+                </div>
+                <div class="activity-card">
+                  <i class="pi pi-bolt activity-icon teal"></i>
+                  <span class="activity-num">{{ getProductivityScore() }}</span>
+                  <span class="activity-lbl">Puntuación de productividad</span>
+                </div>
+              </div>
+            </div>
+          </p-tabpanel>
+
+        </p-tabpanels>
+      </p-tabs>
+
+      <!-- Action footer -->
+      <div class="action-footer">
+        <p-button
+          label="Descartar"
+          icon="pi pi-times"
+          severity="secondary"
+          [outlined]="true"
+          [disabled]="!isDirty()"
+          (onClick)="discardChanges()" />
+        <p-button
+          label="Guardar cambios"
+          icon="pi pi-check"
+          [loading]="isSaving()"
+          [disabled]="!isDirty()"
+          (onClick)="saveChanges()" />
+      </div>
+    </div>
+
+  </div>
+</div>

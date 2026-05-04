@@ -1,4 +1,4 @@
-.login-container {
+.register-container {
     background: url("/images/pages/login-bg.png") no-repeat center center fixed !important;
     background-size: cover !important;
     height: 100vh;
@@ -8,7 +8,8 @@
     justify-content: center;
     margin: 0;
 }
-.login-glass-card {
+
+.register-glass-card {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -21,9 +22,22 @@
     text-align: center;
 }
 
+.register-header {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
 .main-logo {
-    width: 160px;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
     margin-bottom: 2rem;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .glass-input {
@@ -32,14 +46,14 @@
     color: white !important;
     border-radius: 12px !important;
     width: 100%;
-    
+
     &::placeholder {
         color: rgba(255, 255, 255, 0.5);
     }
 }
 
-.btn-login {
-    background: #2dd4bf !important; // El verde menta de tu foto
+.btn-register {
+    background: #2dd4bf !important;
     border: none !important;
     color: #0f172a !important;
     font-weight: 700 !important;
@@ -48,7 +62,7 @@
     margin-bottom: 1rem;
 }
 
-.btn-guest {
+.btn-cancel {
     background: transparent !important;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
     color: white !important;
@@ -56,25 +70,26 @@
     padding: 0.8rem !important;
 }
 
-.forgot-link, .signup-text, .signup-text a {
+.login-link, .terms-text {
     color: rgba(255, 255, 255, 0.6);
     font-size: 0.85rem;
     text-decoration: none;
     display: block;
-    margin: 1rem 0;
+    margin: 0.5rem 0;
 }
 
-.signup-text a {
-    display: inline;
+.login-link a, .terms-link {
     color: #2dd4bf;
     font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
 }
 
-.login-footer {
-    margin-top: 3rem;
+.register-footer {
+    margin-top: 2rem;
     padding-top: 1.5rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    
+
     .footer-brand {
         display: flex;
         align-items: center;
@@ -82,38 +97,39 @@
         gap: 8px;
         opacity: 0.6;
         margin-bottom: 0.5rem;
-        
-        img { width: 20px; }
-        .brand-name { font-weight: 600; letter-spacing: 1px; color: white; }
+
+        .brand-name {
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: white;
+        }
     }
-    
-    .copyright { font-size: 0.7rem; color: rgba(255, 255, 255, 0.4); }
+
+    .copyright {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.4);
+    }
 }
 
 .error-msg {
     color: #ff4d4d;
     display: block;
     margin-bottom: 10px;
+    font-size: 0.85rem;
 }
 
-.login-header {
+.success-msg {
+    color: #2dd4bf;
+    display: block;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+}
+
+.terms-container {
     display: flex;
-    justify-content: center; 
-    width: 100%;
-    margin-bottom: 1rem;    
-}
-
-
-.main-logo {
-    width: 140px; 
-    height: 140px; 
-    
-
-    border-radius: 50%; 
-    object-fit: cover;   
-    
-    margin-bottom: 2rem; 
-    display: block;      
-    margin-left: auto;  
-    margin-right: auto;  
+    align-items: center;
+    gap: 8px;
+    margin: 1rem 0;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
 }

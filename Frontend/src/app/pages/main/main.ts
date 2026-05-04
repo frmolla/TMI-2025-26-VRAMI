@@ -1,6 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { Router } from '@angular/router';
-import { AppConfigurator } from '@/layout/components/app.configurator';
 import { AuthService } from '@/services/auth.service';
 import { MapComponent } from 'public/app/map/map';
 import { CommonModule } from '@angular/common';
@@ -9,10 +8,12 @@ import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-
 import { MapService } from '@/services/map.service';
 import { Parada } from 'public/app/map/models/parada.model';
 import { Subscription } from 'rxjs';
+
 @Component({
     selector: 'app-main',
     standalone: true,
     imports: [MapComponent, CommonModule, FormsModule, DragDropModule],
+    schemas: [CUSTOM_ELEMENTS_SCHEMA],
     templateUrl: './main.html',
     styleUrl: './main.scss'
 })
@@ -36,10 +37,8 @@ export class Main implements OnInit {
     animacionSub: Subscription | null = null;
 
     ngOnInit() {
-        // Al iniciar, verificamos si hay un usuario logueado
-        this.user = this.authService.getUser();
+        this.user = this.authService.getStoredUser();
 
-        // Si no hay usuario (ni registrado ni invitado), mandamos al login
         if (!this.user) {
             this.router.navigate(['/auth/login']);
         }
@@ -88,7 +87,6 @@ export class Main implements OnInit {
         lugar.pos = this.ruta.length + 1;
         this.ruta.push(lugar);
 
-        // añadir punto de ruta
         this.mapService.addMarker(lugar);
 
         this.lugarActual = '';
@@ -99,12 +97,11 @@ export class Main implements OnInit {
         const parada = this.ruta.at(index);
         if (parada) {
             this.ruta.splice(index, 1);
-            // eliminar punto de ruta
             this.mapService.eraseMarker(parada);
             this.mapService.reorder();
         }
     }
-    // Función para calcular la distancia total del itinerario
+
     get distanciaTotal(): number {
         if (this.ruta.length < 2) return 0;
 
@@ -114,20 +111,17 @@ export class Main implements OnInit {
             const p2 = this.ruta[i + 1];
             total += this.calcularDistanciaEntreDosPuntos(p1.lat, p1.lng, p2.lat, p2.lng);
         }
-        return Math.round(total); // Redondeamos para que quede limpio
+        return Math.round(total);
     }
+
     get totalPaises(): number {
         if (this.ruta.length === 0) return 0;
-
-        // Mapeamos el país de cada parada y usamos Set para limpiar duplicados
         const paisesUnicos = new Set(this.ruta.map((punto) => punto.pais));
-
         return paisesUnicos.size;
     }
 
-    // Fórmula de Haversine
     private calcularDistanciaEntreDosPuntos(lat1: number, lon1: number, lat2: number, lon2: number): number {
-        const R = 6371; // Radio de la Tierra en km
+        const R = 6371;
         const dLat = (lat2 - lat1) * (Math.PI / 180);
         const dLon = (lon2 - lon1) * (Math.PI / 180);
         const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
@@ -157,12 +151,10 @@ export class Main implements OnInit {
         this.videoChunks = [];
 
         try {
-            //fps del video
             const stream = canvas.captureStream(60);
-            // Forzamos un Bitrate altísimo (8 Megabits por segundo)
             let options: MediaRecorderOptions = {
                 mimeType: 'video/webm',
-                videoBitsPerSecond: 8000000 // <--- LA CLAVE PARA LA CALIDAD
+                videoBitsPerSecond: 8000000
             };
             if (MediaRecorder.isTypeSupported('video/webm; codecs=vp8')) {
                 options.mimeType = 'video/webm; codecs=vp8';
@@ -184,13 +176,10 @@ export class Main implements OnInit {
                 }
             };
 
-            // 1. Empezamos a grabar (100ms)
             this.mediaRecorder.start(100);
 
-            // 2. Cronómetro hacia arriba (0s, 1s, 2s...)
             this.intervaloCronometro = setInterval(() => this.tiempoGrabacion++, 1000);
 
-            // 3. Cuando el mapa llegue al destino, paramos con estilo
             this.animacionSub = this.mapService.animationFinished$.subscribe(() => {
                 console.log('¡Animación 100% finalizada! Cortando grabación...');
 
@@ -203,7 +192,6 @@ export class Main implements OnInit {
                 this.animacionSub?.unsubscribe();
             });
 
-            // 4. ¡Disparamos la animación en el mapa!
             this.mapService.triggerAnimation();
         } catch (error) {
             console.error('Error al iniciar la grabación:', error);
@@ -217,29 +205,27 @@ export class Main implements OnInit {
         formData.append('video', blob, 'captura.webm');
 
         try {
+            const token = this.authService.getToken();
             const response = await fetch('http://localhost:3000/projects/1/video', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
             });
 
             if (!response.ok) throw new Error('Falló la conversión en el backend');
 
-            // 1. Recibimos la respuesta como un archivo binario (Blob)
             const mp4Blob = await response.blob();
 
-            // 2. Creamos una URL temporal para ese archivo en la memoria del navegador
             const downloadUrl = window.URL.createObjectURL(mp4Blob);
 
-            // 3. Creamos un enlace <a> invisible, le ponemos la URL y forzamos el clic
             const link = document.createElement('a');
             link.style.display = 'none';
             link.href = downloadUrl;
-            link.download = 'Mi_Ruta_Viajera.mp4'; // El nombre que verá el usuario
+            link.download = 'Mi_Ruta_Viajera.mp4';
 
             document.body.appendChild(link);
-            link.click(); // ¡Esto abre la ventana de descarga del navegador!
+            link.click();
 
-            // 4. Limpiamos la basura para no consumir RAM
             window.URL.revokeObjectURL(downloadUrl);
             document.body.removeChild(link);
 

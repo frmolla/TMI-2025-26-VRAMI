@@ -17,13 +17,6 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         "
     >
-        <div class="recording-overlay" *ngIf="estaGrabando">
-            <div class="recording-card">
-                <i class="pi pi-spin pi-spinner" style="font-size: 3.5rem; color: #38bdf8"></i>
-                <h2>Generando vídeo de la ruta...</h2>
-                <p>Grabando animación <strong>({{ tiempoGrabacion }}s)</strong>. Por favor, no cambies de pestaña.</p>
-            </div>
-        </div>
         <span *ngIf="user?.type === 'guest'" style="color: #333; font-weight: 600; font-size: 0.9rem"> Entraste como Invitado </span>
         <span *ngIf="user?.type === 'user'" style="color: #333; font-weight: 600; font-size: 0.9rem"> Bienvenido {{ user.email }} </span>
 
@@ -82,12 +75,14 @@
         </div>
 
         <div class="controles-inferiores">
-            <label>Tipo de animación</label>
-            <select class="select-animacion">
-                <option>1 - Secuencial</option>
-                <option>2 - Loop</option>
-            </select>
             <button class="btn-descargar" (click)="iniciarCaptura()" [disabled]="estaGrabando">{{ estaGrabando ? 'Grabando (' + tiempoGrabacion + 's)...' : 'Descargar' }}</button>
         </div>
     </aside>
+</div>
+<div class="recording-overlay" *ngIf="estaGrabando">
+    <div class="recording-card">
+        <i class="pi pi-spin pi-spinner" style="font-size: 3.5rem; color: #38bdf8"></i>
+        <h2>Generando vídeo de la ruta...</h2>
+        <p>Grabando animación <strong>({{ tiempoGrabacion }}s)</strong>. Por favor, no cambies de pestaña.</p>
+    </div>
 </div>
